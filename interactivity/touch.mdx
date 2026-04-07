@@ -1,0 +1,206 @@
+---
+title: "Touch input"
+description: "Handle single and multi-touch events for mobile and tablet sketches."
+---
+
+p5.js has first-class support for touch input. The `touches` array tracks every active touch point, and three callback functions — `touchStarted()`, `touchMoved()`, and `touchEnded()` — let you respond to touch events directly.
+
+## The touches array
+
+`touches` is an array that p5.js keeps up to date with every currently active touch point. It is empty when no fingers are on the screen.
+
+Each entry in the array is an object with the following properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `x` | `Number` | Horizontal position relative to the canvas top-left corner. |
+| `y` | `Number` | Vertical position relative to the canvas top-left corner. |
+| `winX` | `Number` | Horizontal position relative to the browser window. |
+| `winY` | `Number` | Vertical position relative to the browser window. |
+| `id` | `Number` | Unique identifier for this touch point. Stays the same for the lifetime of a single touch. |
+
+```js
+function draw() {
+  background(220);
+
+  // Draw a circle at every active touch point.
+  for (let touch of touches) {
+    circle(touch.x, touch.y, 60);
+  }
+}
+```
+
+Use `touch.id` to track individual fingers across frames, for example when building a multi-touch gesture recognizer.
+
+---
+
+## Touch event callbacks
+
+Define any of these functions in your sketch and p5.js calls them automatically when the corresponding event occurs. The `touches` array is updated before each callback runs.
+
+### touchStarted()
+
+Called once each time a new finger touches the screen. If multiple fingers land simultaneously, `touchStarted()` fires once with all new touch points already in `touches`.
+
+```js
+function touchStarted() {
+  // Paint a dot at the start of each new touch.
+  for (let touch of touches) {
+    fill(random(255), random(255), random(255));
+    noStroke();
+    circle(touch.x, touch.y, 40);
+  }
+}
+```
+
+An optional `event` parameter gives you access to the raw [`TouchEvent`](https://developer.mozilla.org/en-US/docs/Web/API/TouchEvent):
+
+```js
+function touchStarted(event) {
+  console.log('Number of touches:', event.touches.length);
+}
+```
+
+### touchMoved()
+
+Called every time any active touch point moves. Use this the same way you would use `mouseDragged()` for drawing.
+
+```js
+function touchMoved() {
+  // Draw lines connecting previous and current touch positions.
+  for (let touch of touches) {
+    // touches[i] gives the current position;
+    // use pmouseX/pmouseY for single-touch previous position.
+    stroke(0, 100, 255);
+    strokeWeight(3);
+    line(pmouseX, pmouseY, touch.x, touch.y);
+  }
+}
+```
+
+### touchEnded()
+
+Called once each time a finger lifts from the screen. At the moment `touchEnded()` runs, the lifted finger has already been removed from `touches`.
+
+```js
+function touchEnded() {
+  console.log('Remaining touches:', touches.length);
+}
+```
+
+---
+
+## Relationship with mouse events
+
+On touchscreen devices, p5.js maps touch events to mouse events unless you define the corresponding touch callback yourself.
+
+| Situation | What fires |
+|-----------|-----------|
+| Touch starts, no `touchStarted()` defined | `mousePressed()` |
+| Touch starts, `touchStarted()` defined | `touchStarted()` only |
+| Touch moves, no `touchMoved()` defined | `mouseDragged()` |
+| Touch moves, `touchMoved()` defined | `touchMoved()` only |
+| Touch ends, no `touchEnded()` defined | `mouseReleased()` |
+| Touch ends, `touchEnded()` defined | `touchEnded()` only |
+
+This means a sketch that uses `mousePressed()` and `mouseDragged()` will work on both desktop and mobile without any changes. Define the explicit touch callbacks when you need multi-touch support or finer control.
+
+<Info>
+  `mouseX` and `mouseY` are updated to the most recent touch position on mobile, so single-touch sketches built around those variables work on touchscreens without modification.
+</Info>
+
+---
+
+## Example: drawing with touch on mobile
+
+This sketch lets users paint with their fingers. Each touch gets a unique color so you can distinguish multiple simultaneous strokes.
+
+<Steps>
+  <Step title="Set up the canvas">
+    ```js
+    const touchColors = {};
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      background(255);
+      strokeWeight(5);
+      noFill();
+    }
+    ```
+  </Step>
+
+  <Step title="Assign a color to each new touch">
+    ```js
+    function touchStarted() {
+      for (let touch of touches) {
+        if (!touchColors[touch.id]) {
+          touchColors[touch.id] = color(
+            random(80, 220),
+            random(80, 220),
+            random(80, 220)
+          );
+        }
+      }
+      return false; // Prevent default browser behavior.
+    }
+    ```
+  </Step>
+
+  <Step title="Draw lines as fingers move">
+    ```js
+    function touchMoved() {
+      for (let touch of touches) {
+        stroke(touchColors[touch.id] || color(0));
+        // For multi-touch, each touch reports its own current position.
+        // Use a small circle to paint without needing per-touch previous coords.
+        circle(touch.x, touch.y, 6);
+      }
+      return false; // Prevent page scrolling.
+    }
+    ```
+  </Step>
+
+  <Step title="Clean up ended touches">
+    ```js
+    function touchEnded() {
+      for (let id in touchColors) {
+        // Remove colors for fingers no longer active.
+        if (!touches.find(t => t.id === Number(id))) {
+          delete touchColors[id];
+        }
+      }
+      return false;
+    }
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Preventing default browser behavior
+
+By default, the browser handles touch events itself — scrolling the page, zooming, or triggering context menus. To stop that behavior and keep touch input inside your sketch, return `false` from your touch callbacks.
+
+```js
+function touchStarted() {
+  // Your logic here...
+  return false; // Prevents scrolling, zooming, etc.
+}
+
+function touchMoved() {
+  // Your logic here...
+  return false;
+}
+
+function touchEnded() {
+  return false;
+}
+```
+
+<Warning>
+  Only return `false` when your canvas is the primary interaction surface. If your page has other scrollable content outside the canvas, preventing default behavior globally will break scrolling for your users.
+</Warning>
+
+<Tip>
+  To make your canvas fill the entire screen on mobile, call `createCanvas(windowWidth, windowHeight)` in `setup()` and define `windowResized()` to resize it when the device orientation changes.
+</Tip>

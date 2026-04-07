@@ -1,0 +1,282 @@
+---
+title: "DOM elements"
+description: "Create and control HTML elements from your sketch using p5's DOM API."
+---
+
+p5.js can create and manipulate HTML elements outside the canvas. This lets you build rich interfaces that combine your sketch with standard controls like sliders, buttons, and text inputs — all without writing separate HTML.
+
+Every function in this section returns a **`p5.Element`** object. You can call methods on that object to position, style, and interact with the element.
+
+---
+
+## Creating elements
+
+### Text and containers
+
+```js
+createDiv(html)     // <div> — block-level container
+createP(html)       // <p>  — paragraph
+createSpan(html)    // <span> — inline container
+```
+
+The optional `html` argument sets the element's inner HTML.
+
+```js
+function setup() {
+  createCanvas(400, 300);
+
+  let heading = createDiv('<strong>Hello from p5!</strong>');
+  heading.position(0, 310); // Place it below the canvas.
+
+  let note = createP('Use the controls below.');
+  note.style('color', 'gray');
+}
+```
+
+### Interactive controls
+
+<Tabs>
+  <Tab title="Button">
+    ```js
+    let btn = createButton('Click me');
+    btn.position(0, 320);
+    btn.mousePressed(handleClick);
+
+    function handleClick() {
+      background(random(255));
+    }
+    ```
+
+    Attach event handlers with `.mousePressed()` directly on the element — this avoids ambiguity with the global `mousePressed()` callback.
+  </Tab>
+
+  <Tab title="Slider">
+    ```js
+    // createSlider(min, max, defaultValue, step)
+    let slider = createSlider(0, 255, 128, 1);
+    slider.position(0, 320);
+    slider.style('width', '200px');
+
+    function draw() {
+      let brightness = slider.value();
+      background(brightness);
+    }
+    ```
+  </Tab>
+
+  <Tab title="Text input">
+    ```js
+    // createInput(defaultValue, type)
+    let input = createInput('Type here...', 'text');
+    input.position(0, 320);
+
+    function draw() {
+      background(220);
+      text(input.value(), 10, 30);
+    }
+    ```
+
+    Set `type` to `'number'` for a numeric input field.
+  </Tab>
+
+  <Tab title="Dropdown">
+    ```js
+    let sel = createSelect();
+    sel.position(0, 320);
+    sel.option('Red');
+    sel.option('Green');
+    sel.option('Blue');
+
+    function draw() {
+      let chosen = sel.value();
+      if (chosen === 'Red')   background(255, 0, 0);
+      if (chosen === 'Green') background(0, 200, 0);
+      if (chosen === 'Blue')  background(0, 0, 255);
+    }
+    ```
+  </Tab>
+
+  <Tab title="Checkbox">
+    ```js
+    // createCheckbox(label, defaultChecked)
+    let cb = createCheckbox('Show grid', false);
+    cb.position(0, 320);
+    cb.changed(toggleGrid);
+
+    let showGrid = false;
+
+    function toggleGrid() {
+      showGrid = cb.checked();
+    }
+    ```
+  </Tab>
+
+  <Tab title="Color picker">
+    ```js
+    let picker = createColorPicker('#ff0000');
+    picker.position(0, 320);
+
+    function draw() {
+      background(220);
+      fill(picker.color());
+      circle(200, 150, 100);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## p5.Element methods
+
+Every element returned by a `create*` function is a `p5.Element`. These methods let you position, style, and control the element from your sketch.
+
+### Layout
+
+| Method | Description |
+|--------|-------------|
+| `.position(x, y)` | Set absolute position in pixels relative to the page. |
+| `.size(w, h)` | Set width and height. |
+
+### Styling
+
+| Method | Description |
+|--------|-------------|
+| `.style(property, value)` | Set a single CSS property. |
+| `.addClass(className)` | Add a CSS class. |
+| `.removeClass(className)` | Remove a CSS class. |
+
+### Content and value
+
+| Method | Description |
+|--------|-------------|
+| `.html(content)` | Set or get the element's inner HTML. |
+| `.value()` | Get the current value (for inputs, sliders, selects). |
+| `.attribute(attr, value)` | Set an HTML attribute. |
+
+### Visibility and lifecycle
+
+| Method | Description |
+|--------|-------------|
+| `.show()` | Make the element visible (`display: block`). |
+| `.hide()` | Hide the element (`display: none`). |
+| `.remove()` | Remove the element from the DOM entirely. |
+
+---
+
+## Selecting existing elements
+
+Use `select()` and `selectAll()` to get references to elements that already exist in your HTML — for example a `<div>` defined in your page template.
+
+```js
+// Select by CSS selector — ID, class, tag, or any valid selector.
+let myDiv = select('#output');
+let buttons = selectAll('.control-btn');
+```
+
+`select()` returns a `p5.Element` or `null` if nothing matches. `selectAll()` returns an array of `p5.Element` objects (empty if nothing matches).
+
+```js
+function setup() {
+  createCanvas(400, 300);
+
+  // Style an existing element on the page.
+  let container = select('#sketch-container');
+  if (container) {
+    container.style('border', '2px solid #ec235c');
+  }
+}
+```
+
+---
+
+## Example: slider controlling circle size, button toggling animation
+
+This sketch combines a slider that controls circle size with a button that pauses and resumes the animation.
+
+<Steps>
+  <Step title="Create the canvas and controls">
+    ```js
+    let sizeSlider;
+    let toggleBtn;
+    let running = true;
+
+    function setup() {
+      createCanvas(400, 300);
+
+      // Slider: min 10, max 200, default 60, step 1.
+      sizeSlider = createSlider(10, 200, 60, 1);
+      sizeSlider.position(10, height + 10);
+      sizeSlider.style('width', width + 'px');
+
+      // Button below the slider.
+      toggleBtn = createButton('Pause');
+      toggleBtn.position(10, height + 50);
+      toggleBtn.mousePressed(toggleAnimation);
+    }
+    ```
+  </Step>
+
+  <Step title="Handle the button click">
+    ```js
+    function toggleAnimation() {
+      if (running) {
+        noLoop();
+        toggleBtn.html('Resume');
+      } else {
+        loop();
+        toggleBtn.html('Pause');
+      }
+      running = !running;
+    }
+    ```
+  </Step>
+
+  <Step title="Draw using the slider value">
+    ```js
+    function draw() {
+      background(30);
+
+      let diameter = sizeSlider.value();
+
+      // Pulsing effect using sin().
+      let pulse = sin(frameCount * 0.05) * 10;
+
+      fill(236, 35, 92);
+      noStroke();
+      circle(width / 2, height / 2, diameter + pulse);
+
+      // Show the current size.
+      fill(255);
+      textAlign(CENTER);
+      text('Size: ' + diameter, width / 2, height - 10);
+    }
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Removing elements
+
+Call `removeElements()` to delete all elements that p5.js created (except the canvas and any `p5.Renderer` objects).
+
+```js
+function mousePressed() {
+  removeElements(); // Clears all p5-created DOM elements.
+}
+```
+
+To remove a single element, call `.remove()` on it directly:
+
+```js
+let label = createP('Temporary label');
+
+setTimeout(() => {
+  label.remove(); // Remove after 3 seconds.
+}, 3000);
+```
+
+<Note>
+  DOM elements created by p5.js are placed in the `<body>` by default. To place an element inside a specific container, create the container first with `createDiv()`, then use `myElement.parent(container)` to nest the element inside it.
+</Note>

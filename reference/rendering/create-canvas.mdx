@@ -1,0 +1,162 @@
+---
+title: "createCanvas()"
+description: "Creates the main drawing canvas for a sketch and returns a p5.Renderer object."
+---
+
+Creates a `<canvas>` element on the web page and sets it as the main drawing surface for the sketch. It should be called **once** in `setup()`. Calling `createCanvas()` more than once produces unpredictable behavior.
+
+```js
+createCanvas(w, h, [renderer], [canvas])
+```
+
+<Note>
+  If `createCanvas()` is not called, p5.js automatically creates a default 100×100 pixel canvas. Call `noCanvas()` in `setup()` to suppress the default canvas entirely.
+</Note>
+
+## Parameters
+
+<ParamField path="w" type="Number">
+  Width of the canvas in pixels. Defaults to `100`. Sets the `width` system variable.
+</ParamField>
+
+<ParamField path="h" type="Number">
+  Height of the canvas in pixels. Defaults to `100`. Sets the `height` system variable.
+</ParamField>
+
+<ParamField path="renderer" type="Constant">
+  Rendering mode. Pass `P2D` (default) for the standard 2D Canvas API, or `WEBGL` for hardware-accelerated 3D rendering via WebGL. If an `HTMLCanvasElement` is passed here instead, P2D mode is used and the element becomes the canvas.
+</ParamField>
+
+<ParamField path="canvas" type="HTMLCanvasElement">
+  An existing `<canvas>` DOM element to use as the sketch surface. When provided alongside a renderer constant, p5.js uses that element instead of creating a new one.
+</ParamField>
+
+## Returns
+
+<ResponseField name="p5.Renderer" type="p5.Renderer">
+  A renderer object that wraps the canvas element. It exposes DOM helper methods such as `.position()`, `.size()`, `.hide()`, and `.show()` inherited from `p5.Element`.
+</ResponseField>
+
+## Coordinate system
+
+The origin and axis orientation differ between renderers:
+
+| Renderer | Origin | X axis | Y axis |
+|----------|--------|--------|--------|
+| `P2D` | Top-left corner `(0, 0)` | Right → | Down ↓ |
+| `WEBGL` | Canvas center `(0, 0)` | Right → | Up ↑ |
+
+<Warning>
+  In WEBGL mode, the origin is at the **center** of the canvas. Coordinates like `(0, 0)` refer to the middle, not the top-left corner. Adjust drawing positions accordingly, or call `translate(-width/2, -height/2)` to match P2D coordinates.
+</Warning>
+
+## System variables
+
+After `createCanvas()` is called, two system variables are set:
+
+- `width` — the canvas width in pixels.
+- `height` — the canvas height in pixels.
+
+Use `resizeCanvas(w, h)` to change the canvas size after creation. Do not set `width` or `height` directly.
+
+## WebGL notes
+
+In WebGL mode, p5.js uses a **WebGL2** context when the browser supports it. Check the `webglVersion` system variable to determine which version is active. To force WebGL1, call `setAttributes({ version: 1 })` before `createCanvas()`.
+
+## Examples
+
+### P2D mode (default)
+
+```js
+function setup() {
+  createCanvas(400, 300);
+
+  background(180);
+
+  // Origin is at the top-left corner.
+  // Draw a diagonal line from top-left to bottom-right.
+  line(0, 0, width, height);
+
+  describe('A diagonal line on a gray background.');
+}
+```
+
+### WEBGL mode
+
+```js
+function setup() {
+  createCanvas(400, 400, WEBGL);
+
+  background(180);
+
+  // Origin is at the canvas center in WEBGL mode.
+  // Offset by half the canvas dimensions to reach the top-left corner.
+  line(-width / 2, -height / 2, width / 2, height / 2);
+
+  describe('A diagonal line on a gray background rendered with WebGL.');
+}
+
+function draw() {
+  background(30);
+
+  // Rotate a box in 3D space.
+  rotateX(frameCount * 0.01);
+  rotateY(frameCount * 0.013);
+  box(100);
+}
+```
+
+### Positioning the canvas with the returned renderer
+
+```js
+function setup() {
+  // Capture the returned p5.Renderer to control placement.
+  let cnv = createCanvas(200, 200);
+
+  // Position the canvas 50px from the left and 20px from the top.
+  cnv.position(50, 20);
+
+  background(220);
+  circle(width / 2, height / 2, 80);
+}
+```
+
+### Using an existing canvas element
+
+```html
+<!-- HTML -->
+<canvas id="myCanvas"></canvas>
+```
+
+```js
+function setup() {
+  // Pass an existing DOM element as the fourth argument.
+  let existingCanvas = document.getElementById('myCanvas');
+  createCanvas(400, 400, P2D, existingCanvas);
+
+  background(200);
+  circle(200, 200, 100);
+}
+```
+
+### Responsive canvas with windowResized
+
+```js
+function setup() {
+  createCanvas(windowWidth, windowHeight);
+}
+
+function draw() {
+  background(220);
+  circle(width / 2, height / 2, 80);
+}
+
+function windowResized() {
+  // Keep the canvas filling the browser window.
+  resizeCanvas(windowWidth, windowHeight);
+}
+```
+
+## Related
+
+- [`createGraphics()`](/reference/rendering/graphics) — create an offscreen graphics buffer.

@@ -1,0 +1,213 @@
+---
+title: "createGraphics()"
+description: "Creates an offscreen p5.Graphics buffer with the full p5.js drawing API."
+---
+
+Creates a `p5.Graphics` object — an offscreen drawing canvas that is separate from the main sketch canvas. Drawing to a graphics buffer is useful for performance optimization, layer compositing, and generating reusable textures.
+
+```js
+createGraphics(w, h, [renderer], [canvas])
+```
+
+The returned `p5.Graphics` object supports nearly all the same drawing methods as the main canvas (`circle()`, `rect()`, `fill()`, `stroke()`, `image()`, etc.). Draw the buffer onto the main canvas using `image(g, x, y)`.
+
+## Parameters
+
+<ParamField path="w" type="Number" required>
+  Width of the graphics buffer in pixels.
+</ParamField>
+
+<ParamField path="h" type="Number" required>
+  Height of the graphics buffer in pixels.
+</ParamField>
+
+<ParamField path="renderer" type="Constant">
+  Rendering mode. Pass `P2D` (default) for the 2D Canvas API, or `WEBGL` for WebGL rendering. If an `HTMLCanvasElement` is passed here instead, P2D mode is used and that element becomes the buffer's canvas.
+</ParamField>
+
+<ParamField path="canvas" type="HTMLCanvasElement">
+  An existing `<canvas>` DOM element to use as the buffer's backing surface.
+</ParamField>
+
+## Returns
+
+<ResponseField name="p5.Graphics" type="p5.Graphics">
+  An offscreen graphics buffer object. It has its own `width`, `height`, and `drawingContext` properties, and exposes the full p5.js drawing API bound to the buffer's canvas.
+</ResponseField>
+
+## Working with p5.Graphics
+
+### Drawing to the buffer
+
+Call any p5.js drawing function as a method on the `p5.Graphics` object:
+
+```js
+let g = createGraphics(200, 200);
+
+g.background(50);
+g.fill(255, 100, 0);
+g.noStroke();
+g.circle(100, 100, 80);
+```
+
+### Displaying the buffer
+
+Pass the `p5.Graphics` object to `image()` to render it on the main canvas:
+
+```js
+// Draw the buffer at position (50, 50) on the main canvas.
+image(g, 50, 50);
+```
+
+### Resetting transformations
+
+Unlike the main canvas, a `p5.Graphics` object does **not** reset its transformation matrix between `draw()` calls automatically. Call `g.reset()` manually to clear accumulated transforms:
+
+```js
+function draw() {
+  g.translate(1, 0); // Accumulates each frame without reset.
+  g.reset();         // Clear transforms at the end of the frame.
+}
+```
+
+### Freeing memory
+
+When a buffer is no longer needed, remove it to release both the DOM element and CPU memory:
+
+```js
+// Remove the <canvas> element from the page.
+g.remove();
+
+// Release the JavaScript reference so it can be garbage collected.
+g = undefined;
+```
+
+<Note>
+  All variables that reference the buffer must be set to `undefined` (or go out of scope) before the object can be garbage collected. A single remaining reference keeps it in memory.
+</Note>
+
+## Use cases
+
+<Tip>
+  Graphics buffers are most valuable when you need to separate rendering concerns: draw a complex scene once to a buffer, then reuse it every frame without re-rendering.
+</Tip>
+
+- **Static backgrounds** — render a background once into a buffer, then `image()` it each frame instead of redrawing every shape.
+- **Layer compositing** — maintain separate buffers for foreground, background, and UI; composite them in `draw()`.
+- **Render effects once** — generate textures, gradients, or procedural patterns at startup and reuse them.
+- **WEBGL post-processing** — draw 3D geometry to a WEBGL buffer, then display it as a flat 2D texture on the main P2D canvas.
+
+## Examples
+
+### Drawing to a buffer and compositing
+
+```js
+let pg;
+
+function setup() {
+  createCanvas(400, 400);
+
+  // Create a 200×200 offscreen buffer.
+  pg = createGraphics(200, 200);
+
+  // Draw into the buffer once.
+  pg.background(100);
+  pg.fill(255);
+  pg.noStroke();
+  pg.circle(pg.width / 2, pg.height / 2, 80);
+}
+
+function draw() {
+  background(200);
+
+  // Composite the buffer onto the main canvas at (100, 100).
+  image(pg, 100, 100);
+}
+```
+
+### Animated buffer
+
+```js
+let pg;
+
+function setup() {
+  createCanvas(400, 400);
+  pg = createGraphics(200, 200);
+}
+
+function draw() {
+  background(220);
+
+  // Update the buffer every frame.
+  let bg = frameCount % 255;
+  pg.background(bg);
+  pg.fill(255, 100, 0);
+  pg.noStroke();
+  pg.circle(100, 100, 60);
+
+  // Display the buffer centered on the main canvas.
+  image(pg, 100, 100);
+}
+```
+
+### WEBGL buffer as a texture
+
+```js
+let pg;
+
+function setup() {
+  createCanvas(400, 400);
+
+  // Create a WEBGL graphics buffer for 3D rendering.
+  pg = createGraphics(200, 200, WEBGL);
+}
+
+function draw() {
+  background(30);
+
+  // Draw 3D geometry into the buffer.
+  pg.background(50);
+  pg.lights();
+  pg.noStroke();
+  pg.rotateX(frameCount * 0.01);
+  pg.rotateY(frameCount * 0.013);
+  pg.torus(50, 20);
+
+  // Display the 3D scene as a flat image on the main canvas.
+  image(pg, 100, 100);
+}
+```
+
+### Freeing a buffer on demand
+
+```js
+let pg;
+
+function setup() {
+  createCanvas(400, 400);
+
+  pg = createGraphics(150, 150);
+  pg.background(100);
+  pg.circle(75, 75, 60);
+
+  describe('A gray square. Double-click to remove the overlay.');
+}
+
+function draw() {
+  background(200);
+
+  if (pg) {
+    image(pg, 125, 125);
+  }
+}
+
+function doubleClicked() {
+  // Free the buffer and its DOM element.
+  pg.remove();
+  pg = undefined;
+}
+```
+
+## Related
+
+- [`createCanvas()`](/reference/rendering/create-canvas) — creates the main sketch canvas.

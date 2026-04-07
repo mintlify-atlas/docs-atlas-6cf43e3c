@@ -1,0 +1,99 @@
+---
+title: "The sketch lifecycle"
+description: "How p5.js manages preload, setup, and the draw loop to animate your sketch."
+---
+
+Every p5.js sketch follows the same lifecycle: assets load in `preload()`, initial state is configured in `setup()`, and then `draw()` runs repeatedly to produce animation.
+
+## Execution order
+
+```
+preload()  →  setup()  →  draw()  →  draw()  →  draw()  ...
+```
+
+<Steps>
+  <Step title="preload()">
+    Called once before anything else. Use it to load images, fonts, JSON, and other assets. The sketch will not advance to `setup()` until all load functions complete.
+  </Step>
+  <Step title="setup()">
+    Called once after `preload()`. Create your canvas here with `createCanvas()` and set any initial drawing state.
+  </Step>
+  <Step title="draw()">
+    Called repeatedly — up to 60 times per second by default. This is where animation and interactivity happen.
+  </Step>
+</Steps>
+
+## Basic example
+
+```js sketch.js
+function setup() {
+  createCanvas(400, 400);
+  background(220);
+}
+
+function draw() {
+  // Move a circle across the canvas
+  background(220); // clear previous frame
+  let x = (frameCount * 2) % width;
+  circle(x, height / 2, 50);
+}
+```
+
+## Controlling the loop
+
+<Note>
+  `draw()` is called automatically — never call it manually.
+</Note>
+
+| Function | Description |
+|---|---|
+| `noLoop()` | Stops `draw()` from repeating |
+| `loop()` | Restarts the draw loop after `noLoop()` |
+| `redraw()` | Runs `draw()` exactly once |
+| `isLooping()` | Returns `true` if the loop is running |
+
+```js
+function setup() {
+  createCanvas(400, 400);
+  noLoop(); // draw once, then stop
+}
+
+function draw() {
+  background(200);
+  circle(mouseX, mouseY, 60);
+}
+
+function mousePressed() {
+  redraw(); // re-draw on click
+}
+```
+
+## Timing system variables
+
+| Variable | Type | Description |
+|---|---|---|
+| `frameCount` | Number | Total frames drawn since sketch started |
+| `frameRate()` | Number | Current frames per second |
+| `deltaTime` | Number | Milliseconds since the last frame |
+| `millis()` | Number | Milliseconds since sketch started |
+
+```js
+function draw() {
+  // Frame-rate-independent animation using deltaTime
+  let speed = 0.1; // pixels per millisecond
+  x += speed * deltaTime;
+}
+```
+
+## Setting frame rate
+
+```js
+function setup() {
+  createCanvas(400, 400);
+  frameRate(30); // target 30 fps instead of 60
+}
+```
+
+<Tip>
+  Use `deltaTime` for physics and movement so your animation looks the same regardless of frame rate.
+</Tip>

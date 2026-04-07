@@ -1,0 +1,198 @@
+---
+title: "Lights and materials"
+description: "Use p5.js lighting functions and material types to control how 3D surfaces are shaded and textured in WebGL mode."
+---
+
+Lighting and materials work together to determine how a 3D surface looks. Lights define where illumination comes from; materials define how a surface responds to that illumination. Both systems are only available in WebGL mode.
+
+<Note>
+Without any lights in the scene, geometry is drawn using its fill color with no shading. Add at least one light function to trigger the lighting pipeline.
+</Note>
+
+## Lights
+
+### Ambient light
+
+Ambient light illuminates every surface equally regardless of its orientation. Use it as a baseline fill to prevent unlit faces from going completely black.
+
+```js
+ambientLight(r, g, b);
+ambientLight(gray);       // grayscale shorthand
+ambientLight('orchid');   // CSS color string or p5.Color object
+```
+
+Color values follow the current `colorMode()`. In the default RGB mode, values range from 0 to 255.
+
+### Directional light
+
+Directional light simulates a distant source (like the sun) with parallel rays traveling in a fixed direction. The `x, y, z` parameters describe the direction vector, not a position.
+
+```js
+directionalLight(r, g, b, x, y, z);
+```
+
+For example, `directionalLight(255, 255, 255, 0, -1, 0)` shines straight down from above.
+
+### Point light
+
+A point light radiates in all directions from a single position in 3D space, like a bare light bulb.
+
+```js
+pointLight(r, g, b, x, y, z);
+```
+
+### Spot light
+
+A spotlight emits a cone of light from a position in a specific direction, with a controllable angle and falloff.
+
+```js
+spotLight(r, g, b, x, y, z, dx, dy, dz, angle, concentration);
+```
+
+| Parameter | Meaning |
+|-----------|---------|
+| `r, g, b` | Light color |
+| `x, y, z` | Position of the light |
+| `dx, dy, dz` | Direction the cone points |
+| `angle` | Half-angle of the cone in radians |
+| `concentration` | How quickly the light falls off toward the cone edge |
+
+### Disabling lights
+
+```js
+noLights();
+```
+
+Clears all active lights. Useful when you want to draw some geometry without lighting and then re-enable lights for other geometry in the same frame.
+
+## Materials
+
+A material determines how a surface reacts to the lights in the scene. Call a material function before drawing the geometry it should apply to.
+
+<Tabs>
+  <Tab title="Overview">
+
+| Function | Responds to | Best for |
+|----------|------------|---------|
+| `ambientMaterial()` | Ambient + directional | Matte colored surfaces |
+| `specularMaterial()` | All lights + specular | Shiny or metallic surfaces |
+| `emissiveMaterial()` | Nothing (self-lit) | Glowing objects, UI elements |
+| `normalMaterial()` | Nothing (fixed) | Debugging surface normals |
+| `texture()` | All lights | Image-mapped surfaces |
+
+  </Tab>
+  <Tab title="Code examples">
+
+```js
+// Matte, reacts to ambient and directional light
+ambientMaterial(200, 100, 50);
+
+// Shiny surface — combine with shininess()
+specularMaterial(255, 255, 255);
+shininess(50);
+
+// Self-illuminating — ignores scene lights
+emissiveMaterial(0, 200, 100);
+
+// Colors faces by their normal direction (debug)
+normalMaterial();
+```
+
+  </Tab>
+</Tabs>
+
+### Specular exponent
+
+`shininess(n)` controls the tightness of the specular highlight produced by `specularMaterial()`. Higher values produce a smaller, sharper highlight.
+
+```js
+shininess(100); // tight, mirror-like highlight
+shininess(5);   // broad, soft highlight
+```
+
+### Texture mapping
+
+`texture()` maps a `p5.Image`, `p5.Graphics`, or video element onto the surface of geometry:
+
+```js
+let img;
+
+function preload() {
+  img = loadImage('assets/texture.png');
+}
+
+function draw() {
+  background(30);
+  texture(img);
+  sphere(80);
+}
+```
+
+<Tip>
+You can pass a `p5.Graphics` object as a texture to render live 2D content onto a 3D surface — for example, a canvas showing text or animated shapes.
+</Tip>
+
+### Normal material
+
+`normalMaterial()` is a quick debugging tool that colors each face according to its outward normal direction (red = X, green = Y, blue = Z). It ignores all lights and materials set elsewhere.
+
+```js
+function draw() {
+  background(30);
+  orbitControl();
+  normalMaterial();
+  sphere(80, 12, 12);
+}
+```
+
+## Example: specular sphere with a point light
+
+```js
+function setup() {
+  createCanvas(400, 400, WEBGL);
+}
+
+function draw() {
+  background(30);
+  orbitControl();
+
+  // Soft ambient fill to prevent completely dark areas
+  ambientLight(40, 40, 40);
+
+  // Animated point light orbiting the sphere
+  let lx = sin(frameCount * 0.02) * 200;
+  let lz = cos(frameCount * 0.02) * 200;
+  pointLight(255, 220, 180, lx, -100, lz);
+
+  // Shiny white surface
+  noStroke();
+  specularMaterial(255, 255, 255);
+  shininess(80);
+
+  sphere(100, 24, 24);
+}
+```
+
+<Steps>
+  <Step title="Add ambient light">
+    Start with a dim `ambientLight()` so the unlit side of the sphere is still visible.
+  </Step>
+  <Step title="Position a point light">
+    Place a `pointLight()` somewhere in the scene. Animating its position creates a sense of movement and depth.
+  </Step>
+  <Step title="Apply a specular material">
+    Call `specularMaterial()` followed by `shininess()` before drawing the geometry.
+  </Step>
+  <Step title="Draw the geometry">
+    Call `sphere()` (or any other primitive). The renderer combines the lights and material to produce the final shading.
+  </Step>
+</Steps>
+
+<CardGroup cols={2}>
+  <Card title="Getting started with 3D" icon="cube" href="/webgl/getting-started-3d">
+    Set up a WebGL canvas, draw primitives, and control the camera.
+  </Card>
+  <Card title="Custom shaders" icon="code" href="/webgl/shaders">
+    Replace the default shading pipeline with your own GLSL programs.
+  </Card>
+</CardGroup>

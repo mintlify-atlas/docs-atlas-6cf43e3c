@@ -1,0 +1,247 @@
+---
+title: "Extending p5.js"
+description: "Add new functions to p5.js, hook into the sketch lifecycle, and package your code as a reusable addon library."
+---
+
+p5.js is designed to be extended. You can add your own functions that work exactly like built-in ones, hook into every phase of the sketch lifecycle, and package everything as a library others can drop into their projects.
+
+## Adding functions to p5.prototype
+
+The simplest way to extend p5.js is to attach a method to `p5.prototype`. When you do this, the method becomes available as a global function in global mode, just like `circle()` or `background()`.
+
+```js
+// my-library.js
+p5.prototype.drawStar = function(x, y, r1, r2, npoints) {
+  let angle = TWO_PI / npoints;
+  let halfAngle = angle / 2;
+
+  this.beginShape();
+  for (let a = -HALF_PI; a < TWO_PI - HALF_PI; a += angle) {
+    let sx = x + this.cos(a) * r2;
+    let sy = y + this.sin(a) * r2;
+    this.vertex(sx, sy);
+
+    sx = x + this.cos(a + halfAngle) * r1;
+    sy = y + this.sin(a + halfAngle) * r1;
+    this.vertex(sx, sy);
+  }
+  this.endShape(CLOSE);
+};
+```
+
+With the library loaded, you can call it just like any built-in function:
+
+```js
+function draw() {
+  background(30);
+  fill(255, 220, 0);
+  noStroke();
+  drawStar(200, 200, 80, 40, 5);
+}
+```
+
+<Warning>
+Always use the `function()` keyword — not arrow functions — when attaching methods to `p5.prototype`. Arrow functions capture `this` from the surrounding scope (usually `window`), so `this.circle()`, `this.width`, and other p5 properties will not be available inside your method.
+</Warning>
+
+### Accessing p5 variables and functions
+
+Inside a prototype method, `this` refers to the sketch instance. You can call any p5 function or read any p5 variable through it:
+
+```js
+p5.prototype.gridLines = function(spacing) {
+  stroke(200);
+  strokeWeight(1);
+  for (let x = 0; x < this.width; x += spacing) {
+    this.line(x, 0, x, this.height);
+  }
+  for (let y = 0; y < this.height; y += spacing) {
+    this.line(0, y, this.width, y);
+  }
+};
+```
+
+## Extending p5 classes
+
+You can also extend p5 classes like `p5.Element` or `p5.Graphics` by adding methods to their prototypes:
+
+```js
+// Add a method to every p5.Element
+p5.Element.prototype.shout = function() {
+  this.elt.innerHTML += '!';
+  return this; // enables method chaining
+};
+```
+
+This is useful when your library wraps DOM interaction or builds on the graphics buffer API.
+
+## Registering preload methods
+
+If your library loads external data asynchronously, register it with `registerPreloadMethod()` so p5.js knows to wait for it before running `setup()`.
+
+<Steps>
+  <Step title="Register the method name">
+    Call `p5.prototype.registerPreloadMethod()` with the function name and its target object:
+
+    ```js
+    p5.prototype.registerPreloadMethod('loadCSV', p5.prototype);
+    ```
+  </Step>
+  <Step title="Signal completion with _decrementPreload()">
+    Inside your async function, call `this._decrementPreload()` once the data is ready. This tells p5.js that one pending preload operation is finished:
+
+    ```js
+    p5.prototype.loadCSV = function(filename) {
+      let result = [];
+
+      fetch(filename)
+        .then(res => res.text())
+        .then(data => {
+          data.split('\n').forEach(line => {
+            result.push(line.split(','));
+          });
+          this._decrementPreload(); // signal completion
+        });
+
+      return result; // must return an object (not a primitive)
+    };
+    ```
+  </Step>
+  <Step title="Use it in preload()">
+    Users can now call your function in `preload()` and p5.js will wait for it:
+
+    ```js
+    let myData;
+
+    function preload() {
+      myData = loadCSV('data.csv');
+    }
+
+    function setup() {
+      createCanvas(400, 400);
+      console.log(myData); // populated
+    }
+    ```
+  </Step>
+</Steps>
+
+<Note>
+The return value of a preload method must be an object (arrays count). p5.js passes it by reference, so the fetch callback can populate it after the function returns. Returning a primitive (string, number, boolean) will not work.
+</Note>
+
+## Lifecycle hooks
+
+`registerMethod(hook, fn)` lets you run code at specific points in the sketch lifecycle without the user having to call anything manually.
+
+```js
+p5.prototype.registerMethod('pre', function() {
+  // Runs at the start of every draw() call
+  this.background('#ed225d'); // p5 pink as default background
+});
+
+p5.prototype.registerMethod('remove', function() {
+  // Clean up external resources when remove() is called
+  myExternalThing.destroy();
+});
+```
+
+Available hooks, in execution order:
+
+| Hook | When it runs |
+|------|-------------|
+| `init` | When the sketch initializes, before the sketch function runs. Global mode properties are not yet attached to `window`. |
+| `beforePreload` | Before `preload()` is called. |
+| `afterPreload` | After `preload()` finishes. |
+| `beforeSetup` | Before `setup()` is called. |
+| `afterSetup` | After `setup()` finishes. |
+| `pre` | At the start of each `draw()` call. |
+| `post` | At the end of each `draw()` call. |
+| `remove` | When `remove()` is called on the sketch. |
+
+To stop a hook from running, call `unregisterMethod()`:
+
+```js
+p5.prototype.unregisterMethod('pre', myPreFunction);
+```
+
+## Structuring your library
+
+Wrap your library code in an IIFE to avoid polluting the global scope and to guard against missing dependencies:
+
+```js
+(function(global) {
+  // Guard: do nothing if p5 is not loaded
+  if (typeof p5 === 'undefined') {
+    console.warn('my-library requires p5.js to be loaded first.');
+    return;
+  }
+
+  p5.prototype.drawStar = function(x, y, r1, r2, npoints) {
+    // ...
+  };
+
+  p5.prototype.registerMethod('init', function() {
+    // one-time setup
+  });
+
+}(typeof globalThis !== 'undefined' ? globalThis : window));
+```
+
+For modern tooling, you can use ES modules and a bundler like Rollup to produce a single distributable file.
+
+## Global mode vs. instance mode
+
+Test your library in both modes. In global mode, your prototype methods become global functions. In instance mode, users call them on their `p5` instance:
+
+<Tabs>
+  <Tab title="Global mode">
+    ```js
+    // p5.js binds prototype methods to window automatically
+    function setup() {
+      createCanvas(400, 400);
+      drawStar(200, 200, 80, 40, 5);
+    }
+    ```
+  </Tab>
+  <Tab title="Instance mode">
+    ```js
+    const sketch = (p) => {
+      p.setup = function() {
+        p.createCanvas(400, 400);
+        p.drawStar(200, 200, 80, 40, 5); // called on the instance
+      };
+    };
+
+    new p5(sketch);
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+Avoid naming your functions after native JavaScript globals like `Math`, `console`, `document`, or `event`. In global mode, p5.js binds all prototype methods to `window`, which would overwrite those built-ins.
+</Tip>
+
+## Naming conventions
+
+- Method and property names use `camelCase`.
+- File names follow the pattern `p5.mylibrary.js` (lowercase word after `p5.`).
+- Class names use `PascalCase`. Do not use the `p5.` prefix for your own classes — that namespace is reserved for p5.js core.
+- Do not overwrite existing p5 functions unless you intend to replace them entirely.
+
+## Publishing and distribution
+
+<Steps>
+  <Step title="Build a single file">
+    Bundle your library into one JS file that users can drop into a `<script>` tag or install via npm. Provide both a development version and a minified production version.
+  </Step>
+  <Step title="Write documentation">
+    Document every public function. Consider following the p5.js reference format with parameter tables and runnable examples on the p5.js web editor.
+  </Step>
+  <Step title="Submit to the libraries page">
+    Once your library is open source and ready to share, submit a pull request to the p5.js website repository to have it listed at [p5js.org/libraries](https://p5js.org/libraries/).
+  </Step>
+</Steps>
+
+## Community libraries
+
+The p5.js ecosystem includes libraries for audio, machine learning, serial communication, hardware input, color spaces, and much more. Browse the full list at [p5js.org/libraries](https://p5js.org/libraries/).

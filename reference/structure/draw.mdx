@@ -1,0 +1,142 @@
+---
+title: "draw()"
+description: "Called repeatedly to update and render the sketch; the main animation loop in p5.js."
+---
+
+A function that's called repeatedly while the sketch runs. Declaring `draw()` sets a code block to run in a continuous loop after `setup()` completes. It is the place to animate shapes, respond to user input, and update sketch state each frame.
+
+```js
+function draw() {
+  // Code to run on every frame.
+}
+```
+
+<Tip>
+  Call `background()` at the start of `draw()` to clear the previous frame. Without it, each frame draws on top of the last, leaving a visible trail.
+</Tip>
+
+## Frame rate
+
+By default, `draw()` targets **60 frames per second**. The actual rate depends on the complexity of the sketch and the host machine's performance.
+
+- Use `frameRate(n)` to set a target frame rate.
+- Read the current rate with `frameRate()` (no argument).
+
+## System variables
+
+Two system variables are updated every frame and are useful inside `draw()`:
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `frameCount` | `Number` | Total number of times `draw()` has executed since the sketch started. Starts at `0` before the first frame. |
+| `deltaTime` | `Number` | Milliseconds elapsed since the last frame. Use this for frame-rate-independent animation so motion speed remains consistent regardless of actual frame rate. |
+
+## Controlling the loop
+
+| Function | Effect |
+|----------|--------|
+| `noLoop()` | Stops `draw()` from repeating. The current frame completes first. |
+| `loop()` | Resumes `draw()` after `noLoop()` was called. |
+| `redraw()` | Executes `draw()` exactly once while the loop is stopped. |
+| `isLooping()` | Returns `true` if the draw loop is currently running. |
+
+<Note>
+  Never call `draw()` manually. p5.js manages the loop internally using `requestAnimationFrame`. Calling `draw()` directly bypasses the frame timing system.
+</Note>
+
+## Examples
+
+### Clearing the canvas each frame
+
+```js
+function setup() {
+  createCanvas(400, 400);
+}
+
+function draw() {
+  // Clear the previous frame before drawing again.
+  background(220);
+
+  // The circle follows the mouse without leaving a trail.
+  circle(mouseX, mouseY, 40);
+}
+```
+
+### Oscillating animation with frameCount and deltaTime
+
+```js
+let x = 200;
+
+function setup() {
+  createCanvas(400, 200);
+}
+
+function draw() {
+  background(30);
+
+  // Oscillate horizontally using frameCount and sin().
+  // Multiply frameCount by a small value to control speed.
+  let offset = sin(frameCount * 0.05) * 150;
+
+  fill(100, 200, 255);
+  noStroke();
+  circle(x + offset, height / 2, 40);
+}
+```
+
+### Frame-rate-independent movement with deltaTime
+
+```js
+let posX = 0;
+// Speed in pixels per second — consistent regardless of frame rate.
+const SPEED = 120;
+
+function setup() {
+  createCanvas(400, 200);
+}
+
+function draw() {
+  background(220);
+
+  // deltaTime is in milliseconds; divide by 1000 for seconds.
+  posX += SPEED * (deltaTime / 1000);
+
+  // Wrap around the canvas.
+  if (posX > width) posX = 0;
+
+  fill(255, 80, 80);
+  noStroke();
+  circle(posX, height / 2, 30);
+}
+```
+
+### Stopping and resuming the loop
+
+```js
+function setup() {
+  createCanvas(400, 400);
+  frameRate(5);
+}
+
+function draw() {
+  background(200);
+
+  let x = random(0, width);
+  let y = random(0, height);
+  circle(x, y, 20);
+}
+
+// Stop the loop on double-click; resume on the next double-click.
+function doubleClicked() {
+  if (isLooping()) {
+    noLoop();
+  } else {
+    loop();
+  }
+}
+```
+
+## Related
+
+- [`setup()`](/reference/structure/setup) — runs once before `draw()` starts.
+- [`preload()`](/reference/structure/preload) — loads assets before `setup()` runs.

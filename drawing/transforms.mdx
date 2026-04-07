@@ -1,0 +1,256 @@
+---
+title: "Transforms"
+description: "Move, rotate, scale, and shear the coordinate system with translate, rotate, scale, and push/pop."
+---
+
+Transforms in p5.js work by modifying the **coordinate system** rather than the positions of individual shapes. When you call `translate(50, 0)`, you move the origin 50 pixels to the right; every shape drawn after that call is positioned relative to the new origin.
+
+<Info>
+Transformations accumulate within a single `draw()` call. Because p5.js resets the matrix at the start of each frame, transforms applied inside `draw()` do not carry over to the next frame.
+</Info>
+
+---
+
+## translate
+
+Moves the origin of the coordinate system to a new location.
+
+```js
+translate(x, y)
+```
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  // Without translate: rect draws at (10, 10) from the canvas corner
+  rect(10, 10, 40, 40);
+
+  // Shift the origin 100px right and 100px down
+  translate(100, 100);
+
+  // This rect is drawn at (0, 0) relative to the new origin,
+  // which is (100, 100) on the canvas
+  fill(255, 100, 0);
+  rect(0, 0, 40, 40);
+}
+```
+
+---
+
+## rotate
+
+Rotates the coordinate system clockwise about the **current origin**.
+
+```js
+rotate(angle)
+```
+
+The angle is in **radians** by default. Call `angleMode(DEGREES)` to use degrees instead.
+
+<Tabs>
+  <Tab title="Radians (default)">
+    ```js
+    function draw() {
+      background(220);
+
+      translate(100, 100);      // rotate around canvas center
+      rotate(QUARTER_PI);       // 45 degrees clockwise
+
+      rectMode(CENTER);
+      rect(0, 0, 60, 60);
+    }
+    ```
+  </Tab>
+  <Tab title="Degrees">
+    ```js
+    function setup() {
+      createCanvas(200, 200);
+      angleMode(DEGREES);
+    }
+
+    function draw() {
+      background(220);
+
+      translate(100, 100);
+      rotate(45);               // 45 degrees clockwise
+
+      rectMode(CENTER);
+      rect(0, 0, 60, 60);
+    }
+    ```
+  </Tab>
+  <Tab title="Animated">
+    ```js
+    function draw() {
+      background(220);
+
+      translate(100, 100);
+      rotate(frameCount * 0.02); // spins each frame
+
+      rectMode(CENTER);
+      rect(0, 0, 60, 30);
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+`rotate()` rotates around the **current origin**, not the center of the shape. Always `translate()` to the shape's center first, then rotate, then draw the shape at `(0, 0)`.
+</Warning>
+
+---
+
+## scale
+
+Scales the coordinate system. All shapes drawn afterward appear proportionally larger or smaller.
+
+```js
+scale(s)          // uniform scale in x and y
+scale(sx, sy)     // independent scale per axis
+```
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  // Normal size
+  rect(10, 10, 40, 40);
+
+  // Double size from the origin
+  scale(2);
+  fill(100, 180, 255);
+  rect(10, 10, 40, 40);  // drawn at 20×20 with 80×80 size
+}
+```
+
+<Note>
+Scale values greater than 1 enlarge; values between 0 and 1 shrink. Negative values flip the axis.
+</Note>
+
+---
+
+## shearX and shearY
+
+Shear slants the coordinate system along one axis.
+
+```js
+shearX(angle)   // slant along the x-axis
+shearY(angle)   // slant along the y-axis
+```
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  shearX(PI / 6);   // ~30 degrees shear
+  rect(20, 60, 80, 60);
+}
+```
+
+---
+
+## push and pop
+
+`push()` saves the current transformation matrix (and style state) onto a stack. `pop()` restores the most recently saved state. This lets you apply transforms to one group of shapes without affecting others.
+
+```js
+push();
+  // transforms and styles here are isolated
+pop();
+// back to the state before push()
+```
+
+### Example: multiple shapes at independent positions
+
+```js
+function setup() {
+  createCanvas(300, 200);
+}
+
+function draw() {
+  background(240);
+
+  let colors = ['#e74c3c', '#3498db', '#2ecc71'];
+  let positions = [60, 150, 240];
+
+  for (let i = 0; i < 3; i++) {
+    push();                         // save state
+
+    translate(positions[i], 100);   // move origin to this shape's center
+    rotate(frameCount * 0.02 * (i + 1)); // each shape spins at a different speed
+
+    fill(colors[i]);
+    noStroke();
+    rectMode(CENTER);
+    rect(0, 0, 40, 40);             // draw centered at (0,0) = current origin
+
+    pop();                          // restore state — next iteration starts fresh
+  }
+}
+```
+
+<Tip>
+Nest `push()` / `pop()` pairs for hierarchical transforms, like the joints of a robot arm where each segment inherits its parent's position.
+</Tip>
+
+---
+
+## applyMatrix
+
+For advanced use, `applyMatrix()` lets you multiply the current transformation matrix by a raw matrix directly.
+
+In 2D mode, pass six numbers `(a, b, c, d, e, f)` corresponding to the columns of a 3×3 affine matrix:
+
+```
+[ a  c  e ]
+[ b  d  f ]
+[ 0  0  1 ]
+```
+
+```js
+// Equivalent to translate(50, 50)
+applyMatrix(1, 0, 0, 1, 50, 50);
+
+// Equivalent to scale(2)
+applyMatrix(2, 0, 0, 2, 0, 0);
+```
+
+You can also pass an array:
+
+```js
+let m = [1, 0, 0, 1, 50, 50];
+applyMatrix(m);
+```
+
+Call `resetMatrix()` to clear all accumulated transforms and return to the default coordinate system.
+
+---
+
+## Stacking order
+
+Transforms are applied in the order they are called, and each one operates on the already-transformed coordinate system. The result is equivalent to multiplying their matrices right-to-left:
+
+```js
+// 1. translate to (100, 100)
+// 2. rotate 45°
+// 3. scale by 0.5
+// Drawing code here sees: scale(rotate(translate(origin)))
+translate(100, 100);
+rotate(QUARTER_PI);
+scale(0.5);
+rect(0, 0, 60, 60);
+```
+
+For predictable results, the common pattern is:
+
+<Steps>
+  <Step title="push()">Save the current matrix.</Step>
+  <Step title="translate() to the shape's pivot point">Move the origin to where you want the shape.</Step>
+  <Step title="rotate() and/or scale()">Apply orientation and size changes around that pivot.</Step>
+  <Step title="Draw at (0, 0)">Place the shape relative to the transformed origin.</Step>
+  <Step title="pop()">Restore the matrix for the next shape.</Step>
+</Steps>

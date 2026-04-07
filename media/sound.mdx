@@ -1,0 +1,281 @@
+---
+title: "Sound"
+description: "Play audio files, synthesize tones, and analyze audio in real time using the p5.sound addon library."
+---
+
+p5.sound is a separate addon library built on the Web Audio API. It is not included in the base p5.js build. You must add it explicitly before you can use any of its features.
+
+<Warning>
+**Browsers require a user gesture before playing audio.** Calls to `sound.play()` or oscillator `start()` will be silently ignored if no click, keypress, or other user interaction has occurred first. Always trigger audio from an event handler such as `mousePressed()` or a button callback.
+</Warning>
+
+## Including p5.sound
+
+<Tabs>
+  <Tab title="CDN (script tag)">
+    Add the p5.sound script tag **after** the main p5.js script in your HTML file.
+
+    ```html
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/addons/p5.sound.min.js"></script>
+    ```
+  </Tab>
+  <Tab title="Local file">
+    Copy `p5.sound.min.js` from the p5.js release and load it locally.
+
+    ```html
+    <script src="p5.min.js"></script>
+    <script src="p5.sound.min.js"></script>
+    <script src="sketch.js"></script>
+    ```
+  </Tab>
+</Tabs>
+
+## Loading and playing sound files
+
+### `loadSound(path)`
+
+Load an audio file and return a `p5.SoundFile` object. Call it in `preload()` so the file is ready before `setup()` runs.
+
+```js
+let sound;
+
+function preload() {
+  sound = loadSound('assets/beat.mp3');
+}
+
+function setup() {
+  createCanvas(200, 100);
+  background(40);
+  textAlign(CENTER, CENTER);
+  fill(255);
+  text('Click to play', width / 2, height / 2);
+}
+```
+
+Supported formats depend on the browser. Providing both MP3 and OGG versions improves compatibility:
+
+```js
+// p5.sound picks the first format the browser supports
+sound = loadSound('assets/beat'); // tries beat.mp3, beat.ogg, etc.
+```
+
+### Playback controls
+
+| Method | Description |
+| --- | --- |
+| `sound.play()` | Start playback from the current position |
+| `sound.pause()` | Pause; playback resumes from the same position |
+| `sound.stop()` | Stop and reset to the beginning |
+| `sound.loop()` | Play continuously in a loop |
+| `sound.isPlaying()` | Returns `true` if audio is currently playing |
+
+### Volume and rate
+
+```js
+sound.setVolume(0.5);  // 0 (silent) to 1 (full volume)
+sound.rate(1.5);       // playback speed: 1 = normal, 2 = double speed, 0.5 = half speed
+```
+
+### Duration
+
+```js
+let seconds = sound.duration(); // total length in seconds
+```
+
+## Example: click to play / pause
+
+```js
+let sound;
+
+function preload() {
+  sound = loadSound('assets/beat.mp3');
+}
+
+function setup() {
+  createCanvas(200, 100);
+}
+
+function draw() {
+  background(30);
+  textAlign(CENTER, CENTER);
+  fill(255);
+  textSize(18);
+  text(sound.isPlaying() ? 'Pause' : 'Play', width / 2, height / 2);
+}
+
+function mousePressed() {
+  if (sound.isPlaying()) {
+    sound.pause();
+  } else {
+    sound.play();
+  }
+}
+```
+
+## Synthesis: `p5.Oscillator`
+
+`p5.Oscillator` generates a continuous tone using the Web Audio API. No file loading required.
+
+```js
+let osc;
+
+function setup() {
+  createCanvas(200, 100);
+
+  osc = new p5.Oscillator(440, 'sine'); // frequency in Hz, waveform type
+  osc.amp(0.5); // set amplitude (volume), 0–1
+}
+
+function mousePressed() {
+  osc.start(); // must be inside a user gesture
+}
+
+function mouseReleased() {
+  osc.stop();
+}
+```
+
+Available waveform types: `'sine'`, `'triangle'`, `'sawtooth'`, `'square'`.
+
+Change frequency dynamically:
+
+```js
+function mouseMoved() {
+  let freq = map(mouseX, 0, width, 110, 880);
+  osc.freq(freq);
+}
+```
+
+## Audio analysis
+
+### `p5.Amplitude` — measure volume
+
+`p5.Amplitude` reads the overall loudness of any audio source.
+
+```js
+let sound, amp;
+
+function preload() {
+  sound = loadSound('assets/beat.mp3');
+}
+
+function setup() {
+  createCanvas(400, 200);
+  amp = new p5.Amplitude();
+  // By default, p5.Amplitude listens to the master output.
+  // To analyze a specific source: amp.setInput(sound);
+}
+
+function draw() {
+  background(20);
+
+  let level = amp.getLevel(); // 0 (silent) to ~1 (loud)
+  let h = map(level, 0, 1, 0, height);
+
+  fill(0, 200, 100);
+  rect(0, height - h, width, h);
+}
+
+function mousePressed() {
+  sound.loop();
+}
+```
+
+`amp.getLevel()` returns the current RMS amplitude, roughly 0–1.
+
+### `p5.FFT` — frequency analysis
+
+`p5.FFT` (Fast Fourier Transform) breaks audio into frequency bins, letting you visualize a spectrum or detect specific frequency ranges.
+
+```js
+let sound, fft;
+
+function preload() {
+  sound = loadSound('assets/beat.mp3');
+}
+
+function setup() {
+  createCanvas(400, 200);
+  fft = new p5.FFT();
+}
+
+function draw() {
+  background(20);
+
+  let spectrum = fft.analyze(); // array of 1024 amplitude values (0–255)
+
+  noStroke();
+  fill(0, 180, 255);
+
+  for (let i = 0; i < spectrum.length; i++) {
+    let x = map(i, 0, spectrum.length, 0, width);
+    let h = map(spectrum[i], 0, 255, 0, height);
+    rect(x, height - h, width / spectrum.length, h);
+  }
+}
+
+function mousePressed() {
+  sound.loop();
+}
+```
+
+#### Getting energy in a frequency band
+
+`fft.getEnergy()` returns the average amplitude within a named frequency range or between two specific Hz values.
+
+```js
+let bass    = fft.getEnergy('bass');       // ~20–140 Hz
+let mid     = fft.getEnergy('mid');        // ~400–2600 Hz
+let treble  = fft.getEnergy('treble');     // ~5200–14000 Hz
+
+// Or specify a custom range:
+let custom  = fft.getEnergy(200, 800);     // 200–800 Hz
+```
+
+Named bands: `'bass'`, `'lowMid'`, `'mid'`, `'highMid'`, `'treble'`.
+
+## Browser autoplay restrictions
+
+Modern browsers prevent audio from playing until the user has interacted with the page. p5.js includes a `userStartAudio()` helper that unlocks the Web Audio context on the first interaction.
+
+```js
+function setup() {
+  createCanvas(200, 100);
+  // Prompt the browser to unlock audio on first touch/click:
+  let btn = createButton('Start');
+  btn.mousePressed(() => {
+    userStartAudio();
+    sound.loop();
+  });
+}
+```
+
+<Info>
+`userStartAudio()` returns a Promise that resolves when the AudioContext is running. You can `await` it or chain `.then()` if you need to confirm the context is active before proceeding.
+</Info>
+
+## Quick reference
+
+<CardGroup cols={2}>
+  <Card title="Sound files" icon="music">
+    `loadSound(path)` in `preload()`  
+    `.play()` `.pause()` `.stop()` `.loop()`  
+    `.setVolume(0–1)` `.rate(n)` `.isPlaying()`
+  </Card>
+  <Card title="Synthesis" icon="waveform">
+    `new p5.Oscillator(freq, type)`  
+    `.start()` `.stop()` `.freq(hz)` `.amp(0–1)`  
+    Types: sine, triangle, sawtooth, square
+  </Card>
+  <Card title="Amplitude" icon="volume-2">
+    `new p5.Amplitude()`  
+    `.getLevel()` → 0–1  
+    `.setInput(source)` to target a specific sound
+  </Card>
+  <Card title="FFT" icon="chart-bar">
+    `new p5.FFT()`  
+    `.analyze()` → array of 1024 values  
+    `.getEnergy('bass' | 'mid' | 'treble' | hz1, hz2)`
+  </Card>
+</CardGroup>

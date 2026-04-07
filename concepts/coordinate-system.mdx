@@ -1,0 +1,118 @@
+---
+title: "Coordinate system"
+description: "How p5.js positions shapes on the canvas — origin, axes, and transforms."
+---
+
+In p5.js (2D mode), the origin `(0, 0)` is at the **top-left** corner of the canvas. The x-axis increases to the right and the y-axis increases downward.
+
+```
+(0,0) ──────────► x
+  │
+  │
+  ▼
+  y
+```
+
+## Canvas dimensions
+
+`createCanvas(width, height)` sets the canvas size. The system variables `width` and `height` always reflect the current canvas size.
+
+```js
+function setup() {
+  createCanvas(400, 300);
+}
+
+function draw() {
+  // center of the canvas:
+  let cx = width / 2;
+  let cy = height / 2;
+  circle(cx, cy, 80);
+}
+```
+
+<Note>
+  In **WebGL mode** (`createCanvas(w, h, WEBGL)`), the origin is at the **center** of the canvas, not the top-left.
+</Note>
+
+## Transforms
+
+You can move, rotate, and scale the coordinate system itself rather than calculating every shape position manually.
+
+### translate(x, y)
+
+Moves the origin to a new position.
+
+```js
+function draw() {
+  background(220);
+  translate(200, 200); // origin is now at canvas center
+  rect(-25, -25, 50, 50); // centered on the new origin
+}
+```
+
+### rotate(angle)
+
+Rotates the coordinate system around the current origin. The default angle unit is **radians**.
+
+```js
+function draw() {
+  background(220);
+  translate(width / 2, height / 2);
+  rotate(frameCount * 0.02); // slow spin
+  rect(-50, -10, 100, 20);
+}
+```
+
+Use `angleMode(DEGREES)` to work in degrees instead:
+
+```js
+function setup() {
+  createCanvas(400, 400);
+  angleMode(DEGREES);
+}
+
+function draw() {
+  background(220);
+  translate(200, 200);
+  rotate(45); // 45 degrees
+  rect(-50, -10, 100, 20);
+}
+```
+
+### scale(s)
+
+Scales drawing around the current origin.
+
+```js
+translate(width / 2, height / 2);
+scale(2); // draw twice as large
+circle(0, 0, 50);
+```
+
+## Saving and restoring state with push/pop
+
+`push()` saves the current transformation state. `pop()` restores it. Always use them in pairs to prevent transforms from accumulating.
+
+```js
+function draw() {
+  background(220);
+
+  push();
+    translate(100, 200);
+    rotate(0.5);
+    fill('red');
+    rect(-25, -25, 50, 50);
+  pop(); // back to original coordinate system
+
+  push();
+    translate(300, 200);
+    rotate(-0.5);
+    fill('blue');
+    rect(-25, -25, 50, 50);
+  pop();
+}
+```
+
+<Tip>
+  Indent code between `push()` and `pop()` for readability — it makes nesting obvious.
+</Tip>

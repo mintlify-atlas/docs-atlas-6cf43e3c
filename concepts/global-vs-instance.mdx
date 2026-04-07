@@ -1,0 +1,106 @@
+---
+title: "Global mode vs. instance mode"
+description: "Two ways to run a p5.js sketch — as global functions or as an encapsulated object."
+---
+
+p5.js can run in two modes. **Global mode** is the default and puts all p5 functions directly on the `window` object. **Instance mode** wraps everything in a single object, giving you full control over scope.
+
+## Global mode
+
+All p5 functions (`setup`, `draw`, `createCanvas`, `fill`, etc.) are available as plain global functions. This is the simplest way to write a sketch.
+
+```html index.html
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/p5.min.js"></script>
+    <script src="sketch.js"></script>
+  </head>
+  <body></body>
+</html>
+```
+
+```js sketch.js
+function setup() {
+  createCanvas(400, 400);
+}
+
+function draw() {
+  background(220);
+  circle(mouseX, mouseY, 60);
+}
+```
+
+<Note>
+  Global mode works best when p5.js is the only library on the page and you don't need to worry about variable name conflicts.
+</Note>
+
+## Instance mode
+
+Instance mode creates a `p5` object explicitly. All p5 functions are accessed via the instance parameter (conventionally named `p`).
+
+```js sketch.js
+const sketch = function(p) {
+  p.setup = function() {
+    p.createCanvas(400, 400);
+  };
+
+  p.draw = function() {
+    p.background(220);
+    p.circle(p.mouseX, p.mouseY, 60);
+  };
+};
+
+new p5(sketch);
+```
+
+You can also attach the canvas to a specific DOM element:
+
+```js
+const container = document.getElementById('my-canvas');
+new p5(sketch, container);
+```
+
+## When to use instance mode
+
+<CardGroup cols={2}>
+  <Card title="Multiple sketches" icon="layer-group">
+    Run two or more independent p5 sketches on the same page without conflicts.
+  </Card>
+  <Card title="npm / bundlers" icon="box">
+    When importing p5 with `import p5 from 'p5'`, instance mode is the natural fit.
+  </Card>
+  <Card title="Framework integration" icon="puzzle-piece">
+    Embed a sketch inside a React, Vue, or Svelte component safely.
+  </Card>
+  <Card title="No globals" icon="shield">
+    Keep your namespace clean — no p5 variables leak into `window`.
+  </Card>
+</CardGroup>
+
+## Using p5 with npm (instance mode)
+
+```bash
+npm install p5
+```
+
+```js main.js
+import p5 from 'p5';
+
+const sketch = (p) => {
+  p.setup = () => {
+    p.createCanvas(400, 400);
+  };
+
+  p.draw = () => {
+    p.background(220);
+    p.circle(p.mouseX, p.mouseY, 60);
+  };
+};
+
+new p5(sketch);
+```
+
+<Tip>
+  In a React component, create the p5 instance in `useEffect` and call `mySketch.remove()` in the cleanup function to avoid memory leaks.
+</Tip>

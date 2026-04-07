@@ -1,0 +1,262 @@
+---
+title: "Color and style"
+description: "Set fill, stroke, and background colors using RGB values, hex strings, and p5.Color objects."
+---
+
+p5.js uses a simple state-machine model for color: once you call `fill()` or `stroke()`, every shape drawn afterward uses those values until you change them.
+
+## Background
+
+`background()` fills the entire canvas with a color. It is most commonly called at the start of `draw()` to clear the previous frame.
+
+<Tabs>
+  <Tab title="Grayscale">
+    ```js
+    background(200);        // light gray (0 = black, 255 = white)
+    background(200, 128);   // gray with 50% transparency
+    ```
+  </Tab>
+  <Tab title="RGB">
+    ```js
+    background(255, 204, 0);        // bright yellow
+    background(255, 0, 0, 128);     // semi-transparent red
+    ```
+  </Tab>
+  <Tab title="String / hex">
+    ```js
+    background('red');
+    background('#3498db');
+    background('rgba(0, 255, 0, 0.5)');
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Fill
+
+`fill()` sets the interior color for all shapes drawn afterward.
+
+```js
+// Grayscale
+fill(180);
+
+// RGB
+fill(255, 100, 0);
+
+// RGB + alpha (0–255)
+fill(100, 200, 255, 180);
+
+// CSS hex string
+fill('#e74c3c');
+
+// CSS named color
+fill('cornflowerblue');
+```
+
+Call `noFill()` to make shapes transparent — only the stroke will be visible.
+
+```js
+noFill();
+stroke(0);
+rect(50, 50, 100, 100);  // outlined box with no interior
+```
+
+---
+
+## Stroke
+
+`stroke()` sets the outline color using the same syntax as `fill()`.
+
+```js
+stroke(0);               // black outline
+stroke(255, 0, 100);     // pink outline
+stroke('#2ecc71');        // green hex outline
+```
+
+Use `noStroke()` to remove outlines entirely.
+
+```js
+noStroke();
+fill(80, 160, 255);
+circle(100, 100, 80);
+```
+
+### Line thickness
+
+`strokeWeight(n)` sets the width of all strokes and outlines in pixels. The default is `1`.
+
+```js
+strokeWeight(1);
+line(20, 30, 180, 30);
+
+strokeWeight(5);
+line(20, 60, 180, 60);
+
+strokeWeight(12);
+line(20, 90, 180, 90);
+```
+
+### Line cap style
+
+`strokeCap()` controls how the ends of lines are drawn.
+
+| Constant   | Appearance                                     |
+| ---------- | ---------------------------------------------- |
+| `ROUND`    | Semicircular cap extending beyond the endpoint (default) |
+| `SQUARE`   | Flat cap ending exactly at the endpoint         |
+| `PROJECT`  | Flat cap that extends half the stroke weight beyond the endpoint |
+
+```js
+strokeCap(ROUND);
+line(30, 40, 170, 40);
+
+strokeCap(SQUARE);
+line(30, 80, 170, 80);
+
+strokeCap(PROJECT);
+line(30, 120, 170, 120);
+```
+
+### Line join style
+
+`strokeJoin()` controls how two connected line segments meet at a corner.
+
+| Constant | Appearance                          |
+| -------- | ----------------------------------- |
+| `MITER`  | Sharp pointed corner (default)      |
+| `BEVEL`  | Corner cut off with a flat edge     |
+| `ROUND`  | Corner rounded with a circular arc  |
+
+```js
+strokeJoin(MITER);
+rect(20, 20, 60, 60);
+
+strokeJoin(ROUND);
+rect(120, 20, 60, 60);
+```
+
+---
+
+## Transparency with alpha
+
+Every color function accepts an optional fourth argument, **alpha**, on a scale of `0` (fully transparent) to `255` (fully opaque).
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(255);
+
+  // Overlapping translucent circles
+  noStroke();
+
+  fill(255, 0, 0, 160);    // semi-transparent red
+  circle(80, 100, 100);
+
+  fill(0, 0, 255, 160);    // semi-transparent blue
+  circle(120, 100, 100);
+}
+```
+
+<Note>
+Alpha values use the same range as the current `colorMode()`. In `RGB` mode (the default) that range is 0–255. In `HSB` or `HSL` mode the alpha range is 0–1 unless you set a custom max.
+</Note>
+
+---
+
+## The color() object
+
+Store a color in a variable with `color()` to reuse it across multiple shapes or frames without repeating the same arguments.
+
+```js
+let sky, sun;
+
+function setup() {
+  createCanvas(200, 200);
+
+  sky = color(135, 206, 235);   // light blue
+  sun = color(255, 220, 0);     // yellow
+}
+
+function draw() {
+  background(sky);
+
+  noStroke();
+  fill(sun);
+  circle(100, 60, 60);
+}
+```
+
+You can extract individual channels with `red()`, `green()`, `blue()`, and `alpha()`:
+
+```js
+let c = color(100, 150, 200, 220);
+console.log(red(c));    // 100
+console.log(alpha(c));  // 220
+```
+
+---
+
+## Interpolating colors with lerpColor
+
+`lerpColor(c1, c2, amt)` blends two `p5.Color` objects. `amt` is a number between `0.0` (returns `c1`) and `1.0` (returns `c2`).
+
+```js
+let warm, cool;
+
+function setup() {
+  createCanvas(200, 40);
+
+  warm = color(255, 80, 0);
+  cool = color(0, 100, 255);
+}
+
+function draw() {
+  // Draw a gradient bar by blending across the canvas width
+  noStroke();
+  for (let x = 0; x < width; x++) {
+    let between = map(x, 0, width, 0, 1);
+    fill(lerpColor(warm, cool, between));
+    rect(x, 0, 1, height);
+  }
+}
+```
+
+---
+
+## Putting it all together
+
+```js
+let palette;
+
+function setup() {
+  createCanvas(300, 200);
+  noLoop();
+
+  palette = [
+    color(231, 76, 60),
+    color(241, 196, 15),
+    color(46, 204, 113),
+    color(52, 152, 219),
+  ];
+}
+
+function draw() {
+  background(30);
+
+  let w = width / palette.length;
+
+  for (let i = 0; i < palette.length; i++) {
+    // Lighter version for the fill
+    fill(lerpColor(palette[i], color(255), 0.3));
+    // Original color for the stroke
+    stroke(palette[i]);
+    strokeWeight(3);
+    rect(i * w + 10, 40, w - 20, 120, 8);
+  }
+}
+```
+
+<Tip>
+Wrap color state changes in `push()` / `pop()` to avoid accidentally applying a color to shapes outside the current block.
+</Tip>

@@ -1,0 +1,197 @@
+---
+title: "Accessibility"
+description: "Use p5.js built-in tools to make your sketches accessible to screen reader users."
+---
+
+The `<canvas>` element is a grid of pixels. Screen readers have no way to interpret what is drawn on it without help. p5.js includes several functions that generate accessible descriptions and inject them as fallback content inside the canvas element, where screen readers can find them.
+
+## describe()
+
+`describe(text, display?)` is the primary way to make a sketch accessible. It attaches a plain-language description of the canvas that a screen reader will announce.
+
+```js
+function setup() {
+  createCanvas(400, 400);
+  background('pink');
+
+  fill('red');
+  noStroke();
+  circle(67, 67, 20);
+  circle(83, 67, 20);
+  triangle(91, 73, 75, 95, 59, 73);
+
+  describe('A pink canvas with a red heart in the lower-right corner.');
+}
+```
+
+The optional `display` parameter controls visibility:
+
+| Value | Behavior |
+|-------|----------|
+| `FALLBACK` (default) | Description is hidden from sighted users; screen readers read it from the canvas fallback content. |
+| `LABEL` | Description appears in a visible `<div>` next to the canvas. Useful during development, but creates redundant output for screen reader users — remove before publishing. |
+
+### Updating descriptions in animated sketches
+
+Call `describe()` inside `draw()` to keep the description in sync with whatever is currently on screen. p5.js only updates the DOM when the text changes, so there is no performance penalty for calling it every frame.
+
+```js
+function draw() {
+  background(200);
+
+  let x = frameCount % 100;
+
+  fill(0, 255, 0);
+  circle(x, 50, 40);
+
+  // Description updates every frame as x changes.
+  describe(`A green circle at (${x}, 50) moves left to right on a gray canvas.`);
+}
+```
+
+<Tip>
+Write descriptions that convey purpose and context, not just geometry. "A bar chart showing sales growth from January to June" is more useful than "Six rectangles of increasing height."
+</Tip>
+
+## describeElement()
+
+`describeElement(name, text, display?)` describes a specific named element within the canvas. Use it when your sketch contains distinct visual components that are meaningful on their own.
+
+```js
+function setup() {
+  createCanvas(400, 200);
+  background('pink');
+
+  // Sun
+  describeElement('Sun', 'A yellow circle in the upper-right corner.');
+  fill('yellow');
+  noStroke();
+  circle(340, 60, 80);
+
+  // Mountain
+  describeElement('Mountain', 'A dark gray triangle covering the center of the canvas.');
+  fill(80);
+  triangle(200, 180, 80, 180, 200, 60);
+
+  describe('A landscape with a mountain and a sun on a pink background.');
+}
+```
+
+<Note>
+Always pair `describeElement()` calls with a final `describe()` call that gives an overall summary of the canvas. Screen readers use the canvas-level description as the entry point.
+</Note>
+
+The `display` parameter behaves the same as in `describe()`. Avoid `LABEL` in production for the same reason.
+
+## textOutput()
+
+`textOutput(display?)` is a library-generated output — you do not write the description yourself. p5.js automatically tracks the shapes you draw and produces:
+
+- A summary: canvas size, background color, and shape count.
+- A navigable list of shapes with color, position, and canvas coverage.
+- A detail table with coordinates and area for each shape.
+
+```js
+function setup() {
+  createCanvas(400, 400);
+  textOutput();
+
+  background(200);
+  fill(255, 0, 0);
+  circle(20, 20, 20);
+  fill(0, 0, 255);
+  square(50, 50, 50);
+
+  describe('A red circle and a blue square on a gray background.');
+}
+```
+
+A screen reader would encounter output similar to:
+
+> Your output is a, 400 by 400 pixels, gray canvas containing the following 2 shapes: a red circle at top left covering 1% of the canvas. A blue square at middle covering 16% of the canvas.
+
+<Warning>
+`textOutput()` only describes basic shapes (circles, rectangles, triangles, etc.) drawn with p5.js 2D primitives. Text drawn with `text()`, custom shapes built with `beginShape()`, and anything in WebGL mode are not described.
+</Warning>
+
+## gridOutput()
+
+`gridOutput(display?)` produces a spatial grid that maps shape locations onto a 10×10 table. This gives screen reader users a sense of where shapes are positioned relative to each other.
+
+```js
+function setup() {
+  createCanvas(400, 400);
+  gridOutput();
+
+  background(200);
+  fill(255, 165, 0);
+  ellipse(100, 100, 50);
+  fill(255, 0, 200);
+  rect(300, 300, 50, 50);
+
+  describe('An orange circle in the upper-left and a pink square in the lower-right.');
+}
+```
+
+The grid output begins with a summary:
+
+> Gray canvas, 400 by 400 pixels, contains 2 shapes: 1 circle 1 square
+
+Each shape then appears as a link in the cell that corresponds to its canvas location. Selecting a shape reveals its color, type, coordinates, and area.
+
+`textOutput()` and `gridOutput()` complement each other — you can call both in the same sketch.
+
+## Complete example: animated sketch
+
+This sketch combines `describe()` for a live description and `textOutput()` for automatic shape tracking:
+
+```js
+let x = 0;
+
+function setup() {
+  createCanvas(400, 300);
+  textOutput();
+}
+
+function draw() {
+  background(240);
+
+  // Animated circle
+  fill(220, 50, 50);
+  noStroke();
+  circle(x, 150, 60);
+
+  // Static target
+  fill(50, 150, 220);
+  square(340, 120, 60);
+
+  // Live description updated every frame
+  describe(
+    `A red circle moving right at x=${x}. ` +
+    `A blue square is fixed at the right side of the canvas.`
+  );
+
+  x = (x + 2) % 400;
+}
+```
+
+## Best practices
+
+<CardGroup cols={2}>
+  <Card title="Call describe() in draw()" icon="rotate-cw">
+    Animated sketches need updated descriptions. A description written only in `setup()` becomes stale the moment anything moves.
+  </Card>
+  <Card title="Write meaningful text" icon="pencil">
+    Describe what the sketch communicates, not just what it looks like. Include context, relationships between elements, and any interaction the user can trigger.
+  </Card>
+  <Card title="Test with a real screen reader" icon="headphones">
+    Try NVDA (Windows), VoiceOver (macOS/iOS), or TalkBack (Android). Each reader handles dynamic content slightly differently.
+  </Card>
+  <Card title="Remove LABEL before publishing" icon="eye-off">
+    The `LABEL` display mode is a development aid. It creates redundant announcements for screen reader users when left in a published sketch.
+  </Card>
+</CardGroup>
+
+## The Friendly Error System
+
+p5.js includes a Friendly Error System (FES) that intercepts common mistakes — wrong argument types, misspelled function names, calls made outside `setup()` or `draw()` — and prints plain-language messages to the browser console. The FES is active by default and is especially helpful when you are learning the library. You can disable it in production builds by setting `p5.disableFriendlyErrors = true` before your sketch runs.

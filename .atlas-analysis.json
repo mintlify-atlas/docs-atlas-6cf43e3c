@@ -1,28 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "p5.js",
+  "projectType": "sdk-library",
+  "projectName": "p5.js",
+  "projectDescription": "A JavaScript library for creative coding that makes it easy to draw, animate, and build interactive graphics on the web.",
   "theme": "almond",
-  "colors": {
-    "primary": "#ec235c",
-    "light": "#040404",
-    "dark": "#ec235c"
-  },
-  "favicon": "https://media.brand.dev/24214d76-cb97-4d73-95c0-e8dfe2f46c80.png",
-  "logo": {
-    "light": "https://media.brand.dev/2a6cfb36-3803-4fb0-92a5-17b60e8dbc4f.svg",
-    "dark": "https://media.brand.dev/2a6cfb36-3803-4fb0-92a5-17b60e8dbc4f.svg"
-  },
-  "navbar": {
-    "primary": {
-      "type": "github",
-      "href": "https://github.com/processing/p5.js"
-    }
-  },
-  "footer": {
-    "socials": {
-      "github": "https://github.com/processing/p5.js"
-    }
-  },
+  "primaryColor": "#ec235c",
+  "lightColor": "#040404",
+  "darkColor": null,
   "navigation": {
     "tabs": [
       {
@@ -133,5 +116,55 @@
         ]
       }
     ]
-  }
+  },
+  "keyFeatures": [
+    "2D and WebGL (3D) drawing on HTML canvas",
+    "setup/draw loop for animation and interactivity",
+    "Rich color model with RGB, HSB, and HSL support",
+    "Mouse, keyboard, and touch event handling",
+    "DOM manipulation with p5.Element",
+    "Media loading: images, fonts, JSON, tables, XML",
+    "p5.Vector for 2D/3D math and physics",
+    "Friendly Error System (FES) for beginner-friendly errors",
+    "GLSL shader support in WebGL mode",
+    "Addon library system for extending functionality",
+    "Accessibility tools: textOutput, gridOutput, describe()",
+    "Perlin noise and random number utilities"
+  ],
+  "publicApiSurface": [
+    "createCanvas(width, height, renderer?)",
+    "setup()",
+    "draw()",
+    "preload()",
+    "background(color)",
+    "fill(color) / noFill()",
+    "stroke(color) / noStroke()",
+    "rect(x, y, w, h)",
+    "ellipse(x, y, w, h)",
+    "circle(x, y, d)",
+    "line(x1, y1, x2, y2)",
+    "text(str, x, y)",
+    "loadImage(path)",
+    "image(img, x, y)",
+    "p5.Vector",
+    "p5.Color",
+    "p5.Image",
+    "p5.Graphics",
+    "p5.Element",
+    "p5.Shader",
+    "p5.Geometry",
+    "p5.Camera",
+    "mouseX / mouseY",
+    "mousePressed() / mouseReleased() / mouseMoved()",
+    "keyPressed() / keyReleased()",
+    "noise(x, y?, z?)",
+    "random(min?, max?)",
+    "color(r, g, b, a?)",
+    "map(value, start1, stop1, start2, stop2)",
+    "constrain(n, low, high)",
+    "loadFont(path)",
+    "loadJSON(path)",
+    "loadTable(path)",
+    "describe(text)"
+  ]
 }

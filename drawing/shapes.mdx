@@ -1,0 +1,325 @@
+---
+title: "Drawing shapes"
+description: "Draw 2D primitives, configure shape attributes, and build custom polygons with p5.js."
+---
+
+p5.js provides a concise set of functions for drawing everything from a single pixel to complex custom polygons. All drawing functions operate on the current canvas created by `createCanvas()`.
+
+## Basic primitives
+
+### point
+
+Draws a single pixel at `(x, y)`. Its size and color are controlled by `strokeWeight()` and `stroke()`.
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  strokeWeight(8);
+  stroke(255, 0, 0);
+  point(100, 100);
+}
+```
+
+### line
+
+Draws a straight line from `(x1, y1)` to `(x2, y2)`.
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  stroke(0);
+  strokeWeight(2);
+  line(20, 20, 180, 180);
+}
+```
+
+### rect
+
+Draws a rectangle. By default, `(x, y)` is the upper-left corner and `w`, `h` set the dimensions. Optional corner-radius arguments round the corners.
+
+```js
+rect(x, y, w, h)
+rect(x, y, w, h, cornerRadius)          // all corners identical
+rect(x, y, w, h, tl, tr, br, bl)        // each corner independently
+```
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  // Sharp corners
+  rect(20, 20, 80, 60);
+
+  // Rounded corners
+  rect(120, 20, 60, 60, 12);
+}
+```
+
+### ellipse and circle
+
+`ellipse(x, y, w, h)` draws an ellipse centered at `(x, y)`. `circle(x, y, d)` is a shorthand for a uniform circle with diameter `d`.
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  ellipse(60, 100, 80, 50);   // wide ellipse
+  circle(150, 100, 60);        // perfect circle
+}
+```
+
+### triangle
+
+Draws a triangle from three vertex coordinates.
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  triangle(100, 20, 20, 180, 180, 180);
+}
+```
+
+### quad
+
+Draws a quadrilateral (four-sided polygon) defined by four corner points in order.
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  quad(30, 20, 170, 40, 150, 160, 50, 180);
+}
+```
+
+### arc
+
+Draws a section of an ellipse from angle `start` to angle `stop` (in radians by default). The optional `mode` constant controls how the endpoints are connected.
+
+<Tabs>
+  <Tab title="OPEN (default)">
+    ```js
+    arc(100, 100, 120, 120, 0, PI + HALF_PI);
+    ```
+    The two endpoints are left open — no closing line is drawn.
+  </Tab>
+  <Tab title="CHORD">
+    ```js
+    arc(100, 100, 120, 120, 0, PI + QUARTER_PI, CHORD);
+    ```
+    A straight line connects the two endpoints.
+  </Tab>
+  <Tab title="PIE">
+    ```js
+    arc(100, 100, 120, 120, 0, PI + QUARTER_PI, PIE);
+    ```
+    Two straight lines connect each endpoint back to the center, creating a pie-slice shape.
+  </Tab>
+</Tabs>
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  // PIE slice
+  fill(255, 200, 0);
+  arc(100, 100, 140, 140, -HALF_PI, HALF_PI, PIE);
+}
+```
+
+<Note>
+Angles in p5.js are measured clockwise from the positive x-axis (3 o'clock position). Use `angleMode(DEGREES)` if you prefer degree values.
+</Note>
+
+---
+
+## Shape attributes
+
+### fill and noFill
+
+`fill()` sets the interior color of shapes. `noFill()` removes the fill so only the outline is visible.
+
+```js
+fill(255, 100, 0);     // orange fill
+fill('#3498db');        // hex string
+fill(180);             // grayscale
+noFill();              // transparent interior
+```
+
+### stroke, noStroke, and strokeWeight
+
+`stroke()` sets the outline color. `noStroke()` removes the outline. `strokeWeight(n)` controls line thickness in pixels.
+
+```js
+stroke(0);           // black outline
+noStroke();          // no outline
+strokeWeight(4);     // 4-pixel-wide lines
+```
+
+### strokeCap
+
+Controls the style of line endpoints.
+
+<CardGroup cols={3}>
+  <Card title="ROUND">
+    Semicircular caps beyond the line endpoint (default).
+  </Card>
+  <Card title="SQUARE">
+    Square caps that end exactly at the endpoint.
+  </Card>
+  <Card title="PROJECT">
+    Square caps that extend slightly beyond the endpoint.
+  </Card>
+</CardGroup>
+
+```js
+strokeCap(ROUND);
+line(20, 50, 180, 50);
+
+strokeCap(SQUARE);
+line(20, 100, 180, 100);
+```
+
+### strokeJoin
+
+Controls how corners look when two lines meet.
+
+```js
+strokeJoin(MITER);   // sharp pointed corner (default)
+strokeJoin(BEVEL);   // flat cut corner
+strokeJoin(ROUND);   // rounded corner
+```
+
+---
+
+## Coordinate modes
+
+### rectMode
+
+Changes how `rect()` interprets its `(x, y)` parameter.
+
+| Constant  | Meaning                                       |
+| --------- | --------------------------------------------- |
+| `CORNER`  | `(x, y)` is the upper-left corner (default)   |
+| `CORNERS` | `(x1, y1)` and `(x2, y2)` are opposite corners |
+| `CENTER`  | `(x, y)` is the center of the rectangle       |
+| `RADIUS`  | `(x, y)` is center; `w` and `h` are half-widths |
+
+```js
+rectMode(CENTER);
+rect(100, 100, 60, 40); // centered at (100, 100)
+```
+
+### ellipseMode
+
+Works the same way for `ellipse()` and `circle()`.
+
+```js
+ellipseMode(RADIUS);
+ellipse(100, 100, 30, 30); // radius 30 → diameter 60
+```
+
+---
+
+## Custom shapes
+
+For any polygon that the built-in primitives can't express, use `beginShape()` / `vertex()` / `endShape()`.
+
+<Steps>
+  <Step title="Open a shape">
+    Call `beginShape()` to begin recording vertices. You can optionally pass a constant like `TRIANGLES` or `LINES` to change how the vertices are interpreted.
+  </Step>
+  <Step title="Add vertices">
+    Call `vertex(x, y)` for each corner of the polygon.
+  </Step>
+  <Step title="Close the shape">
+    Call `endShape()` to finish. Pass `CLOSE` to automatically draw the final line back to the first vertex.
+  </Step>
+</Steps>
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  fill(100, 200, 150);
+  noStroke();
+
+  // Draw a five-pointed star
+  beginShape();
+  vertex(100, 20);
+  vertex(120, 80);
+  vertex(180, 80);
+  vertex(130, 115);
+  vertex(150, 175);
+  vertex(100, 140);
+  vertex(50, 175);
+  vertex(70, 115);
+  vertex(20, 80);
+  vertex(80, 80);
+  endShape(CLOSE);
+}
+```
+
+### Curves inside a custom shape
+
+You can mix `bezierVertex()` and `curveVertex()` calls between `beginShape()` and `endShape()` to add curves.
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  noFill();
+  stroke(0);
+
+  beginShape();
+  vertex(30, 100);               // starting anchor
+  bezierVertex(80, 20, 140, 180, 170, 100); // control1, control2, anchor2
+  endShape();
+}
+```
+
+### Holes with beginContour / endContour
+
+Cut a hole out of a filled shape by drawing its inner boundary in the **opposite winding direction** between `beginContour()` and `endContour()`.
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  fill(200, 100, 200);
+  noStroke();
+
+  beginShape();
+  // Outer square — clockwise
+  vertex(20, 20);
+  vertex(180, 20);
+  vertex(180, 180);
+  vertex(20, 180);
+
+  // Inner hole — counter-clockwise
+  beginContour();
+  vertex(60, 60);
+  vertex(60, 140);
+  vertex(140, 140);
+  vertex(140, 60);
+  endContour();
+
+  endShape(CLOSE);
+}
+```
+
+<Tip>
+Keep `push()` / `pop()` around drawing code that changes `rectMode`, `ellipseMode`, or stroke attributes so the changes don't affect other parts of your sketch.
+</Tip>

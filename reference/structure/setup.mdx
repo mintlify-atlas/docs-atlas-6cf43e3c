@@ -1,0 +1,87 @@
+---
+title: "setup()"
+description: "Called once when the sketch starts; used to define the initial environment and create the canvas."
+---
+
+A function that's called once when the sketch begins running. Declaring `setup()` sets a code block to run automatically before the draw loop starts. It is the place to create the canvas, initialize variables, and configure rendering options.
+
+```js
+function setup() {
+  // Code to run once at the start of the sketch.
+}
+```
+
+Code placed in `setup()` runs once before `draw()` begins looping. If `preload()` is declared, `setup()` runs immediately after all assets in `preload()` have finished loading.
+
+<Note>
+  `setup()` does not need to be declared explicitly, but it is common practice to do so. p5.js calls it automatically — never call `setup()` manually.
+</Note>
+
+## Typical usage
+
+- Call `createCanvas()` to set the canvas dimensions and renderer.
+- Set initial fill color, stroke, text size, or other rendering state.
+- Initialize sketch variables that will be used in `draw()`.
+- Load any synchronous resources that don't belong in `preload()`.
+
+## Execution order
+
+`setup()` fits into the overall sketch lifecycle as follows:
+
+1. `preload()` — loads external assets (images, fonts, data).
+2. **`setup()`** — runs once; configure initial state here.
+3. `draw()` — runs repeatedly in a loop.
+
+## Example
+
+### Basic canvas with initial settings
+
+```js
+function setup() {
+  createCanvas(400, 400);
+
+  // Set the initial background color once.
+  background(220);
+
+  // Configure default drawing styles.
+  fill(100, 150, 255);
+  stroke(30);
+  strokeWeight(2);
+}
+
+function draw() {
+  // Draw a circle that follows the mouse.
+  circle(mouseX, mouseY, 40);
+}
+```
+
+### Using setup() alongside preload()
+
+```js
+let img;
+
+function preload() {
+  // Assets are guaranteed to be loaded before setup() runs.
+  img = loadImage('assets/bricks.jpg');
+}
+
+function setup() {
+  createCanvas(400, 400);
+
+  // img is available here because preload() has finished.
+  image(img, 0, 0);
+
+  describe('A red brick wall with a circle that follows the mouse.');
+}
+
+function draw() {
+  noStroke();
+  circle(mouseX, mouseY, 20);
+}
+```
+
+## Related
+
+- [`preload()`](/reference/structure/preload) — load assets before `setup()` runs.
+- [`draw()`](/reference/structure/draw) — called repeatedly after `setup()` completes.
+- [`createCanvas()`](/reference/rendering/create-canvas) — creates the main drawing canvas.

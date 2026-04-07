@@ -1,0 +1,335 @@
+---
+title: "Text and typography"
+description: "Render text on the canvas, control font size and style, load custom fonts, and measure string widths."
+---
+
+p5.js can draw text directly on the canvas with fine-grained control over position, size, alignment, and font. Text shares the same color state as shapes: the active `fill()` determines the text color and `stroke()` / `strokeWeight()` add an outline.
+
+---
+
+## Drawing text
+
+### text
+
+```js
+text(str, x, y)
+text(str, x, y, maxWidth, maxHeight)
+```
+
+Draws the string `str` at position `(x, y)`. By default, `(x, y)` is the **bottom-left** corner of the text bounding box.
+
+```js
+function setup() {
+  createCanvas(300, 100);
+  background(240);
+
+  fill(30);
+  noStroke();
+  textSize(20);
+  text('Hello, p5.js!', 20, 60);
+}
+```
+
+Passing `maxWidth` and `maxHeight` wraps text to fit within a box. Text that overflows the box is not drawn.
+
+```js
+text('A longer sentence that will wrap automatically.', 20, 30, 160, 80);
+```
+
+---
+
+## Text size
+
+`textSize(n)` sets the font size in pixels.
+
+```js
+textSize(12);
+text('Small', 20, 30);
+
+textSize(24);
+text('Medium', 20, 70);
+
+textSize(48);
+text('Large', 20, 130);
+```
+
+Call `textSize()` without arguments to read the current size:
+
+```js
+let current = textSize(); // returns current size in pixels
+```
+
+---
+
+## Text font
+
+`textFont(font)` sets the active font. You can pass either a CSS font-family string (for system fonts) or a `p5.Font` object loaded with `loadFont()`.
+
+```js
+// System font by name
+textFont('Georgia');
+textFont('monospace');
+textFont('Arial');
+```
+
+```js
+// p5.Font object (see loadFont below)
+let myFont;
+
+function preload() {
+  myFont = loadFont('assets/Roboto-Regular.ttf');
+}
+
+function setup() {
+  createCanvas(300, 100);
+  background(240);
+
+  textFont(myFont);
+  textSize(28);
+  fill(20);
+  text('Custom font', 20, 60);
+}
+```
+
+---
+
+## Text alignment
+
+`textAlign(horizAlign, vertAlign)` changes how `(x, y)` in `text()` is interpreted.
+
+<Tabs>
+  <Tab title="Horizontal">
+    | Constant | Meaning                              |
+    | -------- | ------------------------------------ |
+    | `LEFT`   | `x` is the left edge (default)       |
+    | `CENTER` | `x` is the horizontal center         |
+    | `RIGHT`  | `x` is the right edge               |
+
+    ```js
+    textAlign(CENTER);
+    text('Centered', width / 2, 50);
+
+    textAlign(RIGHT);
+    text('Right-aligned', width - 10, 80);
+    ```
+  </Tab>
+  <Tab title="Vertical">
+    | Constant   | Meaning                                      |
+    | ---------- | -------------------------------------------- |
+    | `BASELINE` | `y` is the text baseline (default)           |
+    | `TOP`      | `y` is the top of the bounding box           |
+    | `CENTER`   | `y` is the vertical center                   |
+    | `BOTTOM`   | `y` is the bottom of the bounding box        |
+
+    ```js
+    textAlign(CENTER, CENTER);
+    text('Centered in both axes', width / 2, height / 2);
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Text style
+
+`textStyle()` applies bold, italic, or combined styles to system fonts.
+
+| Constant      | Effect                    |
+| ------------- | ------------------------- |
+| `NORMAL`      | Regular weight (default)  |
+| `BOLD`        | Bold weight               |
+| `ITALIC`      | Italic style              |
+| `BOLDITALIC`  | Bold and italic combined  |
+
+```js
+function setup() {
+  createCanvas(200, 160);
+  background(240);
+  textSize(16);
+  fill(30);
+
+  textStyle(NORMAL);
+  text('Normal', 20, 40);
+
+  textStyle(ITALIC);
+  text('Italic', 20, 70);
+
+  textStyle(BOLD);
+  text('Bold', 20, 100);
+
+  textStyle(BOLDITALIC);
+  text('Bold Italic', 20, 130);
+}
+```
+
+<Note>
+`textStyle()` affects system fonts only. Fonts loaded with `loadFont()` use whatever weight and style is baked into the font file itself.
+</Note>
+
+---
+
+## Line spacing
+
+`textLeading(n)` sets the vertical distance between baselines when text wraps or when you include newlines (`\n`). The value is in pixels.
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(240);
+  textSize(16);
+  fill(30);
+
+  let lines = 'Line one\nLine two\nLine three';
+
+  // Default leading
+  text(lines, 20, 40);
+
+  // Wider leading
+  textLeading(30);
+  text(lines, 120, 40);
+}
+```
+
+---
+
+## Measuring text
+
+`textWidth(str)` returns the pixel width of a string at the current text size and font. Use it to position or underline text precisely.
+
+```js
+function setup() {
+  createCanvas(240, 100);
+  background(240);
+
+  textSize(24);
+  fill(30);
+  stroke(200, 0, 0);
+  strokeWeight(1);
+
+  let label = 'Measure me';
+  let x = 20;
+  let y = 60;
+  let w = textWidth(label);
+
+  noStroke();
+  text(label, x, y);
+
+  // Draw an underline
+  stroke(200, 0, 0);
+  line(x, y + 2, x + w, y + 2);
+}
+```
+
+---
+
+## Loading custom fonts
+
+p5.js can load `.otf` and `.ttf` font files with `loadFont()`. Always call it inside `preload()` so the font is ready before `setup()` or `draw()` runs.
+
+<Steps>
+  <Step title="Place the font file in your project">
+    Add the font file to an `assets/` folder (or any folder) in your project.
+  </Step>
+  <Step title="Load it in preload()">
+    ```js
+    let font;
+
+    function preload() {
+      font = loadFont('assets/Inconsolata-Regular.otf');
+    }
+    ```
+  </Step>
+  <Step title="Apply it with textFont()">
+    ```js
+    function setup() {
+      createCanvas(300, 120);
+      background(30);
+
+      textFont(font);
+      textSize(36);
+      fill('#e74c3c');
+      noStroke();
+      text('p5*js', 20, 75);
+    }
+    ```
+  </Step>
+</Steps>
+
+### Using Google Fonts via @font-face
+
+If you are building a sketch inside an HTML page, you can load a Google Font through CSS and reference it by family name in `textFont()`.
+
+```html
+<!-- In your HTML <head> -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link
+  href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
+  rel="stylesheet"
+>
+```
+
+```js
+function setup() {
+  createCanvas(300, 100);
+  background(240);
+
+  // The font must be fully loaded by the browser before this runs.
+  // Wrapping the sketch in a Google Fonts loader callback ensures that.
+  textFont('Pacifico');
+  textSize(36);
+  fill(50, 50, 200);
+  text('Hello!', 20, 65);
+}
+```
+
+<Warning>
+Google Fonts are loaded asynchronously by the browser. If `setup()` runs before the font is ready, p5.js will fall back to a system font. Use a `FontFace` observer or place your sketch in a callback that fires after the CSS font is loaded to guarantee the correct font appears.
+</Warning>
+
+---
+
+## Complete example
+
+A labeled diagram using a loaded font, centered alignment, and measured text for a decorative underline.
+
+```js
+let font;
+
+function preload() {
+  font = loadFont('assets/Inconsolata-Regular.otf');
+}
+
+function setup() {
+  createCanvas(340, 160);
+  noLoop();
+}
+
+function draw() {
+  background(20);
+
+  textFont(font);
+  textAlign(CENTER, CENTER);
+
+  // Title
+  textSize(32);
+  fill('#f1c40f');
+  noStroke();
+  text('p5.js Sketch', width / 2, 55);
+
+  // Underline the title
+  let titleWidth = textWidth('p5.js Sketch');
+  stroke('#f1c40f');
+  strokeWeight(2);
+  line(
+    width / 2 - titleWidth / 2, 72,
+    width / 2 + titleWidth / 2, 72
+  );
+
+  // Subtitle
+  textSize(14);
+  fill(180);
+  noStroke();
+  textStyle(ITALIC);
+  text('Creative coding with JavaScript', width / 2, 110);
+}
+```

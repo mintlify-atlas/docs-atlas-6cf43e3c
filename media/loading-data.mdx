@@ -1,0 +1,324 @@
+---
+title: "Loading data"
+description: "Load JSON, CSV tables, plain text, and XML files, and make HTTP requests from a p5.js sketch."
+---
+
+p5.js provides a family of `load*` functions that fetch external data and parse it into JavaScript-native types. When called inside `preload()`, they block execution of `setup()` and `draw()` until the data is ready, giving you synchronous-style access with no callbacks required.
+
+<Note>
+All `load*` functions **must be called inside `preload()`** if you want the data available in `setup()` and `draw()`. If you call them elsewhere, use the optional callback arguments to handle the data asynchronously.
+</Note>
+
+<Warning>
+**CORS restrictions apply.** Browsers block requests to origins that do not send the appropriate `Access-Control-Allow-Origin` headers. Host your data files locally, use a proxy, or verify that the remote API explicitly allows cross-origin requests.
+</Warning>
+
+## `loadJSON(path)`
+
+Fetches a JSON file or endpoint and returns a JavaScript `Object` or `Array`.
+
+```js
+let data;
+
+function preload() {
+  data = loadJSON('assets/config.json');
+}
+
+function setup() {
+  createCanvas(400, 200);
+  background(220);
+  text(data.title, 20, 40);
+}
+```
+
+With success and error callbacks:
+
+```js
+function preload() {
+  loadJSON('assets/config.json', onLoaded, onError);
+}
+
+function onLoaded(data) {
+  console.log('Loaded:', data);
+}
+
+function onError(err) {
+  console.error('Failed to load JSON:', err);
+}
+```
+
+### Example: load JSON from an API
+
+```js
+let quake;
+
+function preload() {
+  // USGS earthquake feed — returns GeoJSON
+  loadJSON(
+    'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson',
+    data => {
+      quake = data.features[0].properties;
+    }
+  );
+}
+
+function setup() {
+  createCanvas(400, 150);
+  background(30);
+  fill(255);
+  textSize(14);
+  textWrap(WORD);
+
+  if (quake) {
+    text(`Most significant quake this week:`, 20, 40, 360);
+    text(`${quake.place} — magnitude ${quake.mag}`, 20, 70, 360);
+  }
+}
+```
+
+<Tip>
+The USGS earthquake feed is one of the few public JSON APIs that sends permissive CORS headers, making it a reliable choice for testing data loading in the browser.
+</Tip>
+
+## `loadStrings(path)`
+
+Fetches a plain-text file and returns an array of strings, one element per line.
+
+```js
+let lines;
+
+function preload() {
+  lines = loadStrings('assets/poem.txt');
+}
+
+function setup() {
+  createCanvas(400, 300);
+  background(255);
+  fill(0);
+  textSize(14);
+
+  for (let i = 0; i < lines.length; i++) {
+    text(lines[i], 20, 30 + i * 22);
+  }
+}
+```
+
+## `loadTable(path, format?, header?)`
+
+Parses a delimited file (CSV or TSV) and returns a `p5.Table` object.
+
+| Parameter | Values | Description |
+| --- | --- | --- |
+| `path` | string | Path to the CSV or TSV file |
+| `format` | `'csv'` or `'tsv'` | Column separator format |
+| `header` | `'header'` | Treat the first row as column names |
+
+```js
+let table;
+
+function preload() {
+  table = loadTable('assets/data.csv', 'csv', 'header');
+}
+```
+
+### Working with `p5.Table`
+
+```js
+function setup() {
+  createCanvas(400, 300);
+
+  let rowCount = table.getRowCount();
+  let colCount = table.getColumnCount();
+
+  console.log(`${rowCount} rows, ${colCount} columns`);
+  console.log('Columns:', table.columns);
+
+  // Iterate over rows
+  for (let row of table.rows) {
+    let name  = row.getString('name');   // read as string
+    let value = row.getNum('value');     // read as number
+    console.log(name, value);
+  }
+
+  // Access a specific row by index
+  let firstRow = table.getRow(0);
+  console.log(firstRow.getString('name'));
+}
+```
+
+### Example: CSV bar chart
+
+Given a file `assets/scores.csv`:
+
+```
+name,score
+Alice,82
+Bob,67
+Carol,91
+Dan,74
+```
+
+```js
+let table;
+
+function preload() {
+  table = loadTable('assets/scores.csv', 'csv', 'header');
+}
+
+function setup() {
+  createCanvas(400, 250);
+  noLoop();
+}
+
+function draw() {
+  background(240);
+  textSize(12);
+
+  let barMaxWidth = 300;
+  let barHeight   = 30;
+  let padding     = 10;
+
+  for (let i = 0; i < table.getRowCount(); i++) {
+    let row   = table.getRow(i);
+    let name  = row.getString('name');
+    let score = row.getNum('score');
+
+    let y = padding + i * (barHeight + padding);
+    let w = map(score, 0, 100, 0, barMaxWidth);
+
+    fill(70, 130, 200);
+    noStroke();
+    rect(60, y, w, barHeight, 4);
+
+    fill(0);
+    textAlign(RIGHT, CENTER);
+    text(name, 55, y + barHeight / 2);
+
+    textAlign(LEFT, CENTER);
+    text(score, 60 + w + 5, y + barHeight / 2);
+  }
+}
+```
+
+## `loadXML(path)`
+
+Fetches an XML file and returns a `p5.XML` object that wraps the document root.
+
+```js
+let xml;
+
+function preload() {
+  xml = loadXML('assets/animals.xml');
+}
+
+function setup() {
+  createCanvas(400, 200);
+  background(220);
+
+  // Get all child elements named "mammal"
+  let mammals = xml.getChildren('mammal');
+
+  fill(0);
+  textSize(14);
+  for (let i = 0; i < mammals.length; i++) {
+    text(mammals[i].getContent(), 20, 30 + i * 24);
+  }
+}
+```
+
+Useful `p5.XML` methods:
+
+| Method | Returns | Description |
+| --- | --- | --- |
+| `xml.getChildren(tag)` | `p5.XML[]` | All child elements with the given tag name |
+| `xml.getChild(tag)` | `p5.XML` | First matching child element |
+| `xml.getContent()` | `String` | Text content of the element |
+| `xml.getAttribute(name)` | `String` | Value of an attribute |
+| `xml.getName()` | `String` | The element's tag name |
+
+## `httpGet()` and `httpPost()`
+
+For full control over HTTP requests, use `httpGet` and `httpPost`. These work outside `preload()` and always use callbacks or return a Promise.
+
+### `httpGet(url, type?, data?, callback)`
+
+```js
+httpGet(
+  'https://api.example.com/items',
+  'json',          // response type: 'json', 'text', 'xml', 'arrayBuffer', 'blob'
+  null,            // request body (GET requests typically have none)
+  data => {
+    console.log('Response:', data);
+  },
+  err => {
+    console.error('Request failed:', err);
+  }
+);
+```
+
+### `httpPost(url, data, callback)`
+
+```js
+httpPost(
+  'https://api.example.com/submit',
+  { name: 'Alice', score: 99 }, // data sent as JSON
+  response => {
+    console.log('Saved:', response);
+  }
+);
+```
+
+<Info>
+`httpGet` and `httpPost` also return a Promise, so you can use `async/await` inside `setup()` or any async function if you prefer that style over callbacks.
+</Info>
+
+## Choosing the right loading function
+
+<CardGroup cols={2}>
+  <Card title="loadJSON" icon="braces">
+    Structured key–value data, API responses, configuration files. Returns a JS `Object` or `Array`.
+  </Card>
+  <Card title="loadStrings" icon="file-text">
+    Plain text, line-by-line content such as word lists or poetry. Returns `String[]`.
+  </Card>
+  <Card title="loadTable" icon="table">
+    Spreadsheet-style data from CSV or TSV files. Returns `p5.Table` with row and column access methods.
+  </Card>
+  <Card title="loadXML" icon="code">
+    Hierarchical data in XML format. Returns `p5.XML` for traversing tags and attributes.
+  </Card>
+</CardGroup>
+
+## Preload pattern summary
+
+<Steps>
+  <Step title="Declare variables at the top">
+    Declare your data variables in global scope so they are accessible in both `preload()` and `setup()`.
+
+    ```js
+    let myData;
+    let myTable;
+    ```
+  </Step>
+  <Step title="Load inside preload()">
+    Assign each load call to its variable. p5.js waits for all loads to complete.
+
+    ```js
+    function preload() {
+      myData  = loadJSON('assets/data.json');
+      myTable = loadTable('assets/data.csv', 'csv', 'header');
+    }
+    ```
+  </Step>
+  <Step title="Use data in setup() or draw()">
+    By the time `setup()` runs, all loaded variables are fully populated.
+
+    ```js
+    function setup() {
+      createCanvas(400, 300);
+      console.log(myData.title);
+      console.log(myTable.getRowCount());
+    }
+    ```
+  </Step>
+</Steps>

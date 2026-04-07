@@ -1,0 +1,279 @@
+---
+title: "Images"
+description: "Load, display, and manipulate images and pixel data in p5.js."
+---
+
+p5.js can load raster images from local files or base64-encoded strings, draw them to the canvas, apply filters, and give you direct access to every pixel's RGBA values.
+
+## Loading images
+
+Always load images inside `preload()`. p5.js pauses execution of `setup()` and `draw()` until every asset loaded in `preload()` is ready, so you never have to worry about drawing an image before it has finished downloading.
+
+```js
+let img;
+
+function preload() {
+  img = loadImage('assets/photo.jpg');
+}
+
+function setup() {
+  createCanvas(400, 300);
+}
+
+function draw() {
+  image(img, 0, 0);
+}
+```
+
+`loadImage` accepts:
+- A relative path: `'assets/photo.jpg'`
+- A base64-encoded data URI: `'data:image/png;base64,...'`
+- An optional success callback and failure callback as second and third arguments
+
+<Warning>
+External URLs (e.g. `https://example.com/photo.jpg`) may be blocked by the browser due to CORS restrictions. Host assets locally or use a server that sends appropriate CORS headers.
+</Warning>
+
+## Displaying images
+
+### `image(img, x, y)` and `image(img, x, y, w, h)`
+
+Draw a `p5.Image` onto the canvas. The `x` and `y` arguments set the top-left corner of the image (by default). Pass `w` and `h` to scale the image to a specific size.
+
+```js
+// Draw at natural size
+image(img, 0, 0);
+
+// Draw scaled to 200×150 pixels
+image(img, 10, 10, 200, 150);
+```
+
+### `imageMode()`
+
+`imageMode` changes how `x` and `y` are interpreted when placing an image.
+
+| Constant  | Meaning                                           |
+| --------- | ------------------------------------------------- |
+| `CORNER`  | `(x, y)` is the top-left corner (default)         |
+| `CORNERS` | `(x, y)` is the top-left; `(w, h)` is the bottom-right |
+| `CENTER`  | `(x, y)` is the center of the image              |
+
+```js
+imageMode(CENTER);
+image(img, width / 2, height / 2); // centered on canvas
+```
+
+## Tinting images
+
+`tint()` multiplies every pixel in the next `image()` call by the given color. Use it to colorize an image or to change its overall opacity.
+
+```js
+// Semi-transparent image
+tint(255, 128);
+image(img, 0, 0);
+
+// Red tint at full opacity
+tint(255, 0, 0);
+image(img, 0, 0);
+
+// Remove tint for subsequent images
+noTint();
+image(img2, 0, 0);
+```
+
+<Tip>
+`tint(255, alpha)` is the simplest way to fade an image. The first argument keeps the color unchanged while the second sets opacity (0–255).
+</Tip>
+
+## The `p5.Image` class
+
+`loadImage()` returns a `p5.Image` object. You can also create a blank image programmatically with `createImage(width, height)`.
+
+### Dimensions
+
+```js
+console.log(img.width, img.height); // natural pixel dimensions
+```
+
+### Resizing
+
+`img.resize(w, h)` permanently resizes the image's internal canvas. Pass `0` for either dimension to scale proportionally.
+
+```js
+img.resize(200, 0); // scale to 200 px wide, preserve aspect ratio
+img.resize(0, 100); // scale to 100 px tall, preserve aspect ratio
+```
+
+### Reading pixels with `get()`
+
+`img.get(x, y)` returns the `[R, G, B, A]` color array of a single pixel.  
+`img.get(x, y, w, h)` returns a new `p5.Image` cropped to that region.
+
+```js
+let c = img.get(50, 50);       // [r, g, b, a]
+let crop = img.get(10, 10, 80, 60); // p5.Image
+```
+
+You can also call the global `get(x, y)` on the main canvas.
+
+### Writing pixels with `set()`
+
+```js
+img.loadPixels();
+img.set(30, 40, color(255, 0, 0)); // set pixel at (30, 40) to red
+img.updatePixels();
+image(img, 0, 0);
+```
+
+Always call `loadPixels()` before reading or writing, and `updatePixels()` after any changes.
+
+### Direct pixel access via `img.pixels[]`
+
+For bulk operations, work with the flat `pixels` array directly. Each pixel occupies four consecutive elements: red, green, blue, and alpha (0–255 each).
+
+```js
+img.loadPixels();
+
+for (let x = 0; x < img.width; x++) {
+  for (let y = 0; y < img.height; y++) {
+    let i = 4 * (y * img.width + x);
+    // Invert red channel
+    img.pixels[i] = 255 - img.pixels[i];
+  }
+}
+
+img.updatePixels();
+image(img, 0, 0);
+```
+
+### Applying filters
+
+`img.filter()` applies an image-processing filter in place.
+
+<Tabs>
+  <Tab title="GRAY">
+    ```js
+    img.filter(GRAY);
+    ```
+    Converts the image to grayscale.
+  </Tab>
+  <Tab title="INVERT">
+    ```js
+    img.filter(INVERT);
+    ```
+    Inverts every color channel.
+  </Tab>
+  <Tab title="BLUR">
+    ```js
+    img.filter(BLUR, 3); // optional radius argument
+    ```
+    Applies a Gaussian blur. The second argument controls radius (default 1).
+  </Tab>
+  <Tab title="THRESHOLD">
+    ```js
+    img.filter(THRESHOLD, 0.5); // level between 0 and 1
+    ```
+    Converts pixels to black or white based on a brightness threshold.
+  </Tab>
+  <Tab title="POSTERIZE">
+    ```js
+    img.filter(POSTERIZE, 4); // 2–255 levels
+    ```
+    Reduces the number of color levels.
+  </Tab>
+  <Tab title="ERODE / DILATE">
+    ```js
+    img.filter(ERODE);
+    img.filter(DILATE);
+    ```
+    Morphological erosion and dilation for edge detection effects.
+  </Tab>
+</Tabs>
+
+### Saving an image
+
+```js
+img.save('output', 'png');  // saves as output.png
+img.save('output', 'jpg');  // saves as output.jpg
+```
+
+## Pixel manipulation on the main canvas
+
+The same `loadPixels()` / `updatePixels()` pattern works on the main canvas. The global `pixels[]` array exposes every pixel currently drawn.
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  background(220);
+
+  loadPixels();
+
+  let d = pixelDensity(); // account for HiDPI displays
+
+  for (let x = 0; x < width; x++) {
+    for (let y = 0; y < height; y++) {
+      // Index into flat array, accounting for pixel density
+      let i = 4 * ((y * d) * (width * d) + (x * d));
+      pixels[i]     = x;         // red   ← x position
+      pixels[i + 1] = y;         // green ← y position
+      pixels[i + 2] = 128;       // blue  constant
+      pixels[i + 3] = 255;       // alpha fully opaque
+    }
+  }
+
+  updatePixels();
+}
+```
+
+<Note>
+On high-DPI (Retina) displays, `pixelDensity()` returns 2 or higher. The `pixels[]` array is `width * pixelDensity() * height * pixelDensity() * 4` elements long. Always read `pixelDensity()` and factor it into your index calculations.
+</Note>
+
+## Complete example: per-pixel brightness boost
+
+```js
+let img;
+
+function preload() {
+  img = loadImage('assets/photo.jpg');
+}
+
+function setup() {
+  createCanvas(img.width, img.height);
+
+  img.loadPixels();
+
+  for (let i = 0; i < img.pixels.length; i += 4) {
+    img.pixels[i]     = min(img.pixels[i]     + 40, 255); // R
+    img.pixels[i + 1] = min(img.pixels[i + 1] + 40, 255); // G
+    img.pixels[i + 2] = min(img.pixels[i + 2] + 40, 255); // B
+    // alpha unchanged
+  }
+
+  img.updatePixels();
+  image(img, 0, 0);
+}
+```
+
+## Quick reference
+
+<CardGroup cols={2}>
+  <Card title="Loading" icon="download">
+    `loadImage(path)` — call inside `preload()`  
+    `createImage(w, h)` — blank transparent image
+  </Card>
+  <Card title="Displaying" icon="image">
+    `image(img, x, y)`  
+    `image(img, x, y, w, h)`  
+    `imageMode(CORNER | CENTER | CORNERS)`
+  </Card>
+  <Card title="Color effects" icon="palette">
+    `tint(r, g, b, a)` — colorize or fade  
+    `noTint()` — remove tint
+  </Card>
+  <Card title="Pixel access" icon="grid-2x2">
+    `img.loadPixels()` → `img.pixels[]` → `img.updatePixels()`  
+    `img.get(x, y)` / `img.set(x, y, color)`  
+    `img.filter(GRAY | BLUR | INVERT | ...)`
+  </Card>
+</CardGroup>

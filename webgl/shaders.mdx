@@ -1,0 +1,313 @@
+---
+title: "Custom shaders"
+description: "Write GLSL vertex and fragment shaders in p5.js to take full control of how geometry is rendered in WebGL mode."
+---
+
+Shaders are small programs that run on the GPU rather than the CPU. A shader program has two parts: a **vertex shader** that controls where each vertex ends up on screen, and a **fragment shader** that controls the color of each pixel within those triangles. Together they replace p5.js's default rendering pipeline for any geometry you draw after calling `shader()`.
+
+<Warning>
+Shaders are only available in WebGL mode. Calling `shader()` or `loadShader()` in a 2D canvas sketch has no effect, except for filter shaders (see `createFilterShader()` below).
+</Warning>
+
+## Loading shaders from files
+
+The recommended way to load shaders is in `preload()`, which blocks the sketch from starting until all assets — including shaders — have loaded.
+
+```js
+let myShader;
+
+function preload() {
+  // Returns a p5.Shader object
+  myShader = loadShader('shader.vert', 'shader.frag');
+}
+
+function setup() {
+  createCanvas(400, 400, WEBGL);
+}
+
+function draw() {
+  background(0);
+  shader(myShader);   // activate the shader
+  noStroke();
+  plane(400, 400);    // geometry to render with the shader
+}
+```
+
+`loadShader(vertPath, fragPath)` accepts optional `successCallback` and `failureCallback` arguments if you need to handle the load asynchronously.
+
+## Creating shaders from inline strings
+
+When you want to keep everything in one file or generate shader source dynamically, use `createShader()`:
+
+```js
+const vertSrc = `
+  precision highp float;
+  uniform mat4 uModelViewMatrix;
+  uniform mat4 uProjectionMatrix;
+  attribute vec3 aPosition;
+
+  void main() {
+    gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
+  }
+`;
+
+const fragSrc = `
+  precision highp float;
+
+  void main() {
+    gl_FragColor = vec4(1.0, 0.5, 0.0, 1.0); // solid orange
+  }
+`;
+
+let myShader;
+
+function setup() {
+  createCanvas(400, 400, WEBGL);
+  myShader = createShader(vertSrc, fragSrc);
+}
+
+function draw() {
+  background(30);
+  shader(myShader);
+  noStroke();
+  sphere(100);
+}
+```
+
+## Reverting to the default shader
+
+Call `resetShader()` to stop using a custom shader and let p5.js revert to its built-in rendering pipeline for subsequent geometry.
+
+```js
+function draw() {
+  shader(myShader);
+  sphere(80);        // drawn with custom shader
+
+  resetShader();
+  box(60);           // drawn with default shader
+}
+```
+
+## Passing data from JavaScript to GLSL
+
+Use `setUniform()` on a `p5.Shader` object to send values from your sketch into the shader at runtime. You can call it any time after the shader has been created.
+
+```js
+myShader.setUniform('uColor', [1.0, 0.5, 0.0, 1.0]); // vec4
+myShader.setUniform('uTime', millis() / 1000.0);       // float
+myShader.setUniform('uResolution', [width, height]);   // vec2
+```
+
+Supported JavaScript types and their GLSL equivalents:
+
+| JavaScript value | GLSL uniform type |
+|-----------------|------------------|
+| `number` | `float`, `int`, `bool` |
+| `[x, y]` | `vec2` |
+| `[x, y, z]` | `vec3` |
+| `[x, y, z, w]` | `vec4` |
+| `p5.Image` / `p5.Graphics` | `sampler2D` |
+
+## Built-in uniforms and attributes
+
+p5.js automatically provides several uniforms and vertex attributes that you can use in your GLSL code.
+
+### Uniforms
+
+| Name | Type | Description |
+|------|------|-------------|
+| `uModelViewMatrix` | `mat4` | Combined model and view transform |
+| `uProjectionMatrix` | `mat4` | Camera projection transform |
+| `uNormalMatrix` | `mat3` | Transforms normals into view space |
+| `uResolution` | `vec2` | Canvas width and height in pixels |
+
+<Note>
+`uTime` is **not** provided automatically. Pass it yourself with `myShader.setUniform('uTime', millis() / 1000.0)` inside `draw()`.
+</Note>
+
+### Vertex attributes
+
+| Name | Type | Description |
+|------|------|-------------|
+| `aPosition` | `vec3` | Vertex position in model space |
+| `aNormal` | `vec3` | Vertex normal vector |
+| `aTexCoord` | `vec2` | UV texture coordinate (0–1 range) |
+| `aVertexColor` | `vec4` | Per-vertex color |
+
+## Examples
+
+<Tabs>
+  <Tab title="Solid color">
+
+A minimal shader that draws every pixel the same color. This is the smallest valid shader pair.
+
+```glsl
+// shader.vert
+precision highp float;
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
+attribute vec3 aPosition;
+
+void main() {
+  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
+}
+```
+
+```glsl
+// shader.frag
+precision highp float;
+
+void main() {
+  gl_FragColor = vec4(0.2, 0.6, 1.0, 1.0); // solid blue
+}
+```
+
+  </Tab>
+  <Tab title="Animated with uTime">
+
+Pass `millis()` into the shader each frame to animate colors or geometry over time.
+
+```glsl
+// shader.vert
+precision highp float;
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
+attribute vec3 aPosition;
+attribute vec2 aTexCoord;
+varying vec2 vTexCoord;
+
+void main() {
+  vTexCoord = aTexCoord;
+  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
+}
+```
+
+```glsl
+// shader.frag
+precision highp float;
+uniform float uTime;
+varying vec2 vTexCoord;
+
+void main() {
+  // Animate hue by shifting the UV coordinates with time
+  float r = 0.5 + 0.5 * sin(uTime + vTexCoord.x * 6.28);
+  float g = 0.5 + 0.5 * sin(uTime + vTexCoord.y * 6.28 + 2.09);
+  float b = 0.5 + 0.5 * sin(uTime + 4.19);
+  gl_FragColor = vec4(r, g, b, 1.0);
+}
+```
+
+```js
+let myShader;
+
+function preload() {
+  myShader = loadShader('shader.vert', 'shader.frag');
+}
+
+function setup() {
+  createCanvas(400, 400, WEBGL);
+}
+
+function draw() {
+  shader(myShader);
+  myShader.setUniform('uTime', millis() / 1000.0);
+  noStroke();
+  sphere(120, 24, 24);
+}
+```
+
+  </Tab>
+  <Tab title="Inline strings">
+
+Use `createShader()` to write both shader programs directly in your sketch without any separate files.
+
+```js
+const vert = `
+  precision highp float;
+  uniform mat4 uModelViewMatrix;
+  uniform mat4 uProjectionMatrix;
+  attribute vec3 aPosition;
+  attribute vec3 aNormal;
+  varying vec3 vNormal;
+
+  void main() {
+    vNormal = aNormal;
+    gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aPosition, 1.0);
+  }
+`;
+
+const frag = `
+  precision highp float;
+  varying vec3 vNormal;
+
+  void main() {
+    // Visualize normals as colors (same as normalMaterial())
+    vec3 col = (vNormal + 1.0) * 0.5;
+    gl_FragColor = vec4(col, 1.0);
+  }
+`;
+
+let myShader;
+
+function setup() {
+  createCanvas(400, 400, WEBGL);
+  myShader = createShader(vert, frag);
+}
+
+function draw() {
+  background(30);
+  orbitControl();
+  shader(myShader);
+  noStroke();
+  torus(80, 30, 24, 16);
+}
+```
+
+  </Tab>
+</Tabs>
+
+## 2D post-processing with createFilterShader()
+
+`createFilterShader()` creates a special filter shader that operates on the canvas as a 2D image. Unlike regular shaders it only needs a fragment shader — the vertex shader is provided automatically — and it works in both 2D and WebGL mode.
+
+```js
+const fragSrc = `
+  precision highp float;
+  uniform sampler2D tex0;
+  uniform vec2 texelSize;
+  varying vec2 vTexCoord;
+
+  void main() {
+    // Invert colors
+    vec4 color = texture2D(tex0, vTexCoord);
+    gl_FragColor = vec4(1.0 - color.rgb, color.a);
+  }
+`;
+
+let filterShader;
+
+function setup() {
+  createCanvas(400, 400, WEBGL);
+  filterShader = createFilterShader(fragSrc);
+}
+
+function draw() {
+  background(30);
+  // Draw some geometry...
+  sphere(80);
+
+  // Apply the post-process filter to what has been drawn so far
+  filter(filterShader);
+}
+```
+
+The built-in `tex0` sampler gives you the current canvas contents, and `texelSize` provides `vec2(1.0 / width, 1.0 / height)` for neighbour-pixel sampling.
+
+<CardGroup cols={2}>
+  <Card title="Getting started with 3D" icon="cube" href="/webgl/getting-started-3d">
+    Set up a WebGL canvas, draw primitives, and control the camera.
+  </Card>
+  <Card title="Lights and materials" icon="lightbulb" href="/webgl/lights-materials">
+    Add lighting and surface materials to give depth to your scenes.
+  </Card>
+</CardGroup>

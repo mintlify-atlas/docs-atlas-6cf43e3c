@@ -1,0 +1,324 @@
+---
+title: "Creating and Reading Colors"
+description: "Create p5.Color objects and extract individual color components — RGB, HSB, HSL, and alpha — from any color value."
+---
+
+p5.js uses the `p5.Color` class to represent colors. A `p5.Color` object can be passed directly to `fill()`, `stroke()`, and `background()`, and stores the color independently of the current `colorMode()`. Component-extraction functions (`red()`, `green()`, `blue()`, etc.) accept a `p5.Color` object, a CSS color string, or a numeric array.
+
+---
+
+## color
+
+Creates a `p5.Color` object.
+
+The parameters are interpreted according to the current `colorMode()`. In the default RGB mode, values range from 0 to 255. Switching to HSB or HSL changes how the three numeric channels are understood.
+
+**Signatures**
+
+```js
+color(gray, [alpha])              → p5.Color
+color(v1, v2, v3, [alpha])        → p5.Color
+color(colorstring)                → p5.Color
+color(values)                     → p5.Color   // array [r, g, b, a]
+color(color)                      → p5.Color   // pass-through
+```
+
+<ParamField path="gray" type="Number">
+  Grayscale value (0–255 by default).
+</ParamField>
+
+<ParamField path="v1" type="Number">
+  Red value (RGB mode) or hue (HSB/HSL mode).
+</ParamField>
+
+<ParamField path="v2" type="Number">
+  Green value (RGB mode) or saturation (HSB/HSL mode).
+</ParamField>
+
+<ParamField path="v3" type="Number">
+  Blue value (RGB mode) or brightness/lightness (HSB/HSL mode).
+</ParamField>
+
+<ParamField path="alpha" type="Number">
+  Alpha (opacity) value within the current color range.
+</ParamField>
+
+<ParamField path="colorstring" type="String">
+  Any valid CSS color string: named colors, hex (`#rgb`, `#rrggbb`), `rgb()`, `rgba()`, `hsl()`, `hsla()`, and their percentage equivalents.
+</ParamField>
+
+<ParamField path="values" type="Number[]">
+  An array with red, green, blue, and optionally alpha components.
+</ParamField>
+
+**Returns** `p5.Color`
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Create colors in different ways
+  let c1 = color(255, 204, 0);       // bright yellow (RGB)
+  let c2 = color(65);                // dark gray (grayscale)
+  let c3 = color('magenta');         // CSS named color
+  let c4 = color('#0f0');            // 3-digit hex green
+  let c5 = color('rgb(0, 0, 255)');  // CSS rgb() string
+
+  noStroke();
+
+  fill(c1); rect(0, 0, 20, 100);
+  fill(c2); rect(20, 0, 20, 100);
+  fill(c3); rect(40, 0, 20, 100);
+  fill(c4); rect(60, 0, 20, 100);
+  fill(c5); rect(80, 0, 20, 100);
+}
+```
+
+---
+
+## p5.Color class overview
+
+`p5.Color` is an object that stores a color value internally as normalized RGBA. It remembers the `colorMode()` that was active when it was created, so its visual appearance is unaffected by later mode changes.
+
+Key characteristics:
+
+- Pass a `p5.Color` directly to `fill()`, `stroke()`, or `background()`.
+- Call `.toString()` to get a CSS color string (e.g. `'rgba(255, 204, 0, 1)'`).
+- A `p5.Color` is returned by `color()` and `lerpColor()`.
+
+```js
+let c = color(100, 200, 50, 180);
+console.log(c.toString()); // 'rgba(100, 200, 50, 0.706)'
+
+fill(c);
+circle(50, 50, 40);
+```
+
+---
+
+## red / green / blue
+
+Extract individual RGB channel values from a color.
+
+Each function returns the component's value in the current color range (0–255 by default, or whatever was set by `colorMode(RGB, max)`).
+
+**Signatures**
+
+```js
+red(color)    → Number
+green(color)  → Number
+blue(color)   → Number
+```
+
+<ParamField path="color" type="p5.Color | Number[] | String" required>
+  A `p5.Color` object, an array of color components, or a CSS color string.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  let c = color(175, 100, 220);
+
+  noStroke();
+  fill(c);
+  rect(15, 15, 35, 70);
+
+  // Extract and display only the blue component
+  let b = blue(c);     // 220
+  fill(0, 0, b);
+  rect(50, 15, 35, 70);
+}
+```
+
+---
+
+## hue / saturation / brightness / lightness
+
+Extract HSB or HSL components from a color.
+
+| Function | Returns | Default range |
+| --- | --- | --- |
+| `hue(color)` | HSL hue | 0–360 |
+| `saturation(color)` | HSB or HSL saturation | 0–100 |
+| `brightness(color)` | HSB brightness | 0–100 |
+| `lightness(color)` | HSL lightness | 0–100 |
+
+If `colorMode()` is set to HSB or HSL, these functions return values in the range set for that mode.
+
+**Signatures**
+
+```js
+hue(color)         → Number
+saturation(color)  → Number
+brightness(color)  → Number
+lightness(color)   → Number
+```
+
+<ParamField path="color" type="p5.Color | Number[] | String" required>
+  A `p5.Color` object, an array of color components, or a CSS color string.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  colorMode(HSB);
+
+  let c = color(0, 50, 100); // red in HSB
+
+  noStroke();
+  fill(c);
+  rect(15, 15, 35, 70);
+
+  // Extract and display brightness as a grayscale
+  let b = brightness(c);   // 100
+  fill(b);
+  rect(50, 15, 35, 70);
+}
+```
+
+---
+
+## alpha
+
+Gets the alpha (opacity) value of a color.
+
+Returns the alpha in the current color range (0–255 by default). If `colorMode(RGB, 255, 255, 255, 1)` was called, alpha is returned in 0–1.
+
+**Signature**
+
+```js
+alpha(color) → Number
+```
+
+<ParamField path="color" type="p5.Color | Number[] | String" required>
+  A `p5.Color` object, an array of color components, or a CSS color string.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  let c = color(0, 126, 255, 102);
+
+  noStroke();
+  fill(c);
+  rect(15, 15, 35, 70);
+
+  // Display alpha as a grayscale value
+  let a = alpha(c);   // 102
+  fill(a);
+  rect(50, 15, 35, 70);
+}
+```
+
+---
+
+## lerpColor
+
+Interpolates (blends) between two colors.
+
+Returns a new `p5.Color` that is `amt` of the way from `c1` to `c2`. Values for `amt` outside of [0, 1] are clamped — unlike the general `lerp()` function.
+
+Interpolation follows the current `colorMode()`:
+- In RGB mode, each channel is linearly interpolated.
+- In HSB/HSL mode, hue wraps around the color wheel to take the shortest path.
+
+**Signature**
+
+```js
+lerpColor(c1, c2, amt) → p5.Color
+```
+
+<ParamField path="c1" type="p5.Color" required>
+  The color to interpolate from. Create with `color()`.
+</ParamField>
+
+<ParamField path="c2" type="p5.Color" required>
+  The color to interpolate to. Create with `color()`.
+</ParamField>
+
+<ParamField path="amt" type="Number" required>
+  Interpolation amount between `0` (returns `c1`) and `1` (returns `c2`).
+</ParamField>
+
+**Returns** `p5.Color` — the blended color.
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  let from = color(218, 165, 32);   // goldenrod
+  let to   = color(72, 61, 139);    // dark slate blue
+
+  let interA = lerpColor(from, to, 0.33);
+  let interB = lerpColor(from, to, 0.66);
+
+  noStroke();
+
+  fill(from);  rect(10, 20, 20, 60);
+  fill(interA); rect(30, 20, 20, 60);
+  fill(interB); rect(50, 20, 20, 60);
+  fill(to);    rect(70, 20, 20, 60);
+}
+```
+
+<Tip>
+Use `lerpColor()` inside `draw()` with `frameCount` or a variable that changes over time to create smooth color transitions and gradients.
+</Tip>
+
+---
+
+## Complete workflow example
+
+```js
+let baseColor, complementColor;
+
+function setup() {
+  createCanvas(200, 100);
+
+  // Create two colors
+  baseColor       = color(255, 100, 50);  // orange-red
+  complementColor = color(50, 100, 255);  // blue
+
+  noStroke();
+}
+
+function draw() {
+  background(240);
+
+  // Blend based on mouse position
+  let amt = map(mouseX, 0, width, 0, 1);
+  let blended = lerpColor(baseColor, complementColor, amt);
+
+  // Draw blended fill
+  fill(blended);
+  circle(width / 2, height / 2, 80);
+
+  // Show individual channels
+  fill(255, 0, 0);
+  rect(0, 0, red(blended) / 255 * width, 6);
+
+  fill(0, 255, 0);
+  rect(0, 8, green(blended) / 255 * width, 6);
+
+  fill(0, 0, 255);
+  rect(0, 16, blue(blended) / 255 * width, 6);
+}
+```

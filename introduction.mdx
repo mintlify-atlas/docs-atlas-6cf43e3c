@@ -1,0 +1,90 @@
+---
+title: "What is p5.js"
+description: "p5.js is a free, open-source JavaScript library for creative coding — built for artists, designers, educators, and beginners who want to express ideas through code."
+---
+
+p5.js is a JavaScript library that makes creative coding accessible. It gives you a friendly, expressive API for drawing shapes, animating graphics, handling input, loading media, and building interactive experiences — all in the browser, with no build tools required.
+
+It was created by [Lauren Lee McCarthy](https://github.com/lmccart) in 2013 as a web-native reinterpretation of [Processing](https://processing.org/), the open-source language and environment for visual arts. p5.js is sustained by a community of contributors and supported by the [Processing Foundation](https://processingfoundation.org/).
+
+<Note>
+  p5.js 2.0 is in active community testing and development. The 1.x reference stays at [p5js.org](https://p5js.org/), and 2.x documentation is being built at [beta.p5js.org](https://beta.p5js.org/). The web editor will default to 1.x until at least August 2026.
+</Note>
+
+## Who it's for
+
+p5.js is intentionally welcoming to a wide range of people:
+
+- **Artists and designers** who want to create visual work with code, without needing a software engineering background.
+- **Educators** who teach creative coding, media arts, or introductory programming and need an approachable tool for the classroom.
+- **Beginners** learning to program for the first time — p5.js rewards experimentation and gives you visible results immediately.
+- **Experienced developers** building interactive web graphics, generative art, data visualizations, or experimental interfaces.
+
+## What you can do with it
+
+p5.js covers a broad range of capabilities out of the box:
+
+- **2D drawing** — shapes, curves, text, images, and custom vertex paths on an HTML canvas.
+- **Animation** — a built-in draw loop that targets 60 frames per second, with full control over frame rate and loop state.
+- **Interactivity** — respond to mouse position, mouse clicks, keyboard events, and touch input.
+- **Media loading** — load images, fonts, JSON, CSV data, and 3D models using simple `loadX()` functions.
+- **WebGL and 3D** — switch to WebGL mode for lights, materials, cameras, and custom GLSL shaders.
+- **Accessibility** — built-in `describe()` function and community-driven commitment to inclusive design.
+
+## A minimal sketch
+
+Every p5.js sketch is built around two functions: `setup()` runs once when the sketch starts, and `draw()` runs repeatedly to produce animation.
+
+```js
+function setup() {
+  createCanvas(400, 400);
+  background(240);
+}
+
+function draw() {
+  fill(236, 35, 92);
+  noStroke();
+  circle(mouseX, mouseY, 60);
+}
+```
+
+`createCanvas()` creates an HTML canvas element. `background()` fills it with a color. Inside `draw()`, `circle()` draws at the current mouse position — so the sketch is interactive by default.
+
+## Global mode vs instance mode
+
+By default, p5.js runs in **global mode**: all functions (`setup`, `draw`, `circle`, `fill`, etc.) are added directly to the browser's `window` object, so you call them without any prefix. This is the simplest way to get started.
+
+When you use p5.js in a JavaScript module or npm-based project, you'll typically use **instance mode** instead. You wrap your sketch in a function and pass it to the `p5` constructor:
+
+```js
+import p5 from 'p5';
+
+const sketch = (p) => {
+  p.setup = () => {
+    p.createCanvas(400, 400);
+  };
+
+  p.draw = () => {
+    p.background(240);
+    p.circle(p.mouseX, p.mouseY, 60);
+  };
+};
+
+new p5(sketch);
+```
+
+Instance mode keeps your sketch self-contained, which is important when running multiple sketches on a page or integrating with a framework. See [Global vs instance mode](/concepts/global-vs-instance) for a full explanation.
+
+## Where to go next
+
+<CardGroup cols={3}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Get a working sketch running in your browser in minutes.
+  </Card>
+  <Card title="Sketch lifecycle" icon="rotate" href="/concepts/sketch-lifecycle">
+    Understand how setup, draw, and preload work together.
+  </Card>
+  <Card title="Shapes" icon="shapes" href="/drawing/shapes">
+    Draw rectangles, ellipses, lines, curves, and custom paths.
+  </Card>
+</CardGroup>

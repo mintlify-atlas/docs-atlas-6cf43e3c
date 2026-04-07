@@ -1,0 +1,198 @@
+---
+title: "Perlin noise"
+description: "Generate smooth, organic-looking random values using Ken Perlin's noise algorithm."
+---
+
+Perlin noise produces **smooth, continuous** random values, unlike `random()` which can jump erratically between calls. Nearby inputs always produce nearby outputs, making noise ideal for terrain generation, organic textures, fluid motion, and any effect that should feel natural rather than jittery.
+
+The algorithm was invented by Ken Perlin while working on the original *Tron* film in the 1980s.
+
+<Info>
+`noise()` always returns a value between `0.0` and `1.0`. Within a single sketch run it returns the same value for the same input. Call `noiseSeed()` to get reproducible values across runs.
+</Info>
+
+---
+
+## `noise(x, y?, z?)`
+
+Returns a Perlin noise value for the given coordinates in noise space.
+
+```js
+noise(x)        // 1D noise
+noise(x, y)     // 2D noise
+noise(x, y, z)  // 3D noise
+```
+
+<ParamField path="x" type="Number">
+  x-coordinate in noise space.
+</ParamField>
+
+<ParamField path="y" type="Number">
+  y-coordinate in noise space. Defaults to `0`.
+</ParamField>
+
+<ParamField path="z" type="Number">
+  z-coordinate in noise space. Defaults to `0`.
+</ParamField>
+
+**Returns** `Number` — a value between `0.0` and `1.0`.
+
+### How to read the input coordinates
+
+The input to `noise()` is a **position in noise space**, not a pixel coordinate. Small changes in input produce small changes in output; large changes produce uncorrelated values. To get smooth variation, **scale your inputs down** — typically into a range like `0.005`–`0.05`.
+
+```js
+// Too fast — looks nearly random
+let y = noise(frameCount);
+
+// Smooth — looks organic
+let y = noise(frameCount * 0.005);
+```
+
+To animate two independent dimensions (e.g., x and y of a point), offset the coordinates by a large constant so they sample different regions of noise space:
+
+```js
+let x = 100 * noise(0.005 * frameCount);
+let y = 100 * noise(0.005 * frameCount + 10000); // different region
+```
+
+---
+
+## `noiseSeed(seed)`
+
+Sets the seed for `noise()`. By default, each sketch run generates different noise values. Calling `noiseSeed()` with a fixed value makes the noise sequence identical every run.
+
+```js
+noiseSeed(42);
+```
+
+<ParamField path="seed" type="Number">
+  Seed value. Any integer works.
+</ParamField>
+
+---
+
+## `noiseDetail(lod, falloff)`
+
+Controls the character of the noise by adjusting the number of **octaves** (layers) and the **falloff** (how much each successive layer contributes).
+
+```js
+noiseDetail(lod, falloff)
+```
+
+<ParamField path="lod" type="Number">
+  Number of octaves. Higher values add finer detail. Default is `4`.
+</ParamField>
+
+<ParamField path="falloff" type="Number">
+  Weight of each successive octave relative to the previous one. Default is `0.5` (each octave contributes half as much as the one before it). Valid range is `0`–`1`.
+</ParamField>
+
+<Warning>
+Falloff values greater than `0.5` can produce noise values outside the `0`–`1` range.
+</Warning>
+
+### Octaves and falloff explained
+
+Perlin noise is built by layering multiple passes of noise at different scales ("octaves"). Low octaves define broad, sweeping shapes. High octaves add high-frequency detail on top.
+
+```
+Total noise = octave1 * 1.0
+            + octave2 * falloff
+            + octave3 * falloff²
+            + ...
+```
+
+| Setting | Effect |
+|---------|--------|
+| `noiseDetail(2, 0.5)` | Smooth, simple blobs |
+| `noiseDetail(8, 0.5)` | Detailed, complex shapes |
+| `noiseDetail(4, 0.25)` | Sharper, punchier details |
+
+---
+
+## Examples
+
+### Animated particle with noise-driven movement
+
+```js
+let t = 0;
+
+function setup() {
+  createCanvas(400, 400);
+}
+
+function draw() {
+  background(20, 20, 20, 40); // trail effect
+
+  // Map noise values (0–1) to canvas coordinates
+  let x = width  * noise(t);
+  let y = height * noise(t + 5000); // offset for independence
+
+  fill(255, 100, 50);
+  noStroke();
+  circle(x, y, 12);
+
+  t += 0.005; // advance through noise space slowly
+}
+```
+
+### Noise-based terrain silhouette
+
+```js
+function setup() {
+  createCanvas(400, 200);
+  background(0);
+  noLoop();
+}
+
+function draw() {
+  stroke(80, 200, 120);
+  strokeWeight(2);
+
+  for (let x = 0; x < width; x++) {
+    // Scale x into noise space; multiply result to set terrain height
+    let y = height * noise(x * 0.01);
+    line(x, height, x, height - y);
+  }
+}
+```
+
+### 2D noise texture
+
+```js
+function setup() {
+  createCanvas(200, 200);
+  noLoop();
+}
+
+function draw() {
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let c = 255 * noise(x * 0.01, y * 0.01);
+      stroke(c);
+      point(x, y);
+    }
+  }
+}
+```
+
+### Animating a 2D texture over time (3D noise)
+
+```js
+function draw() {
+  let t = frameCount * 0.008;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let c = 255 * noise(x * 0.009, y * 0.009, t);
+      stroke(c);
+      point(x, y);
+    }
+  }
+}
+```
+
+<Tip>
+The third dimension of `noise(x, y, t)` is an easy way to animate a 2D texture — just increment `t` each frame.
+</Tip>

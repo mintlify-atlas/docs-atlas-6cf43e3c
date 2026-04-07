@@ -1,0 +1,127 @@
+---
+title: "Color model"
+description: "How p5.js represents color — RGB, HSB, HSL modes, alpha, and the color() object."
+---
+
+p5.js provides a flexible color system. The default mode is **RGB**, where each channel ranges from 0 to 255. You can switch to **HSB** or **HSL** with `colorMode()`.
+
+## Default: RGB mode
+
+```js
+fill(255, 0, 0);       // red
+fill(0, 128, 0);       // green
+fill(0, 0, 255);       // blue
+fill(180);             // gray (single value = equal RGB)
+fill(255, 165, 0, 128); // orange, 50% transparent
+```
+
+## Color strings and hex
+
+p5.js accepts CSS color strings anywhere a color is expected:
+
+```js
+fill('#FF6347');           // tomato red
+fill('rgb(100, 200, 50)');
+fill('hsl(120, 100%, 50%)');
+fill('rgba(255, 0, 0, 0.5)');
+fill('tomato');            // named CSS colors
+```
+
+## Switching color modes
+
+`colorMode(mode, max1, max2, max3, maxA)` changes how subsequent color values are interpreted.
+
+<Tabs>
+  <Tab title="RGB">
+    ```js
+    colorMode(RGB); // default — channels 0–255
+    fill(255, 0, 128);
+    ```
+  </Tab>
+  <Tab title="HSB">
+    ```js
+    colorMode(HSB, 360, 100, 100); // hue 0–360, saturation and brightness 0–100
+    fill(0, 100, 100);   // pure red
+    fill(120, 100, 100); // pure green
+    fill(240, 100, 100); // pure blue
+    ```
+  </Tab>
+  <Tab title="HSL">
+    ```js
+    colorMode(HSL, 360, 100, 100);
+    fill(0, 100, 50);   // red
+    fill(120, 100, 25); // dark green
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  HSB is often easier for creative work — hue controls the color, saturation controls vividness, brightness controls lightness.
+</Tip>
+
+## Alpha (transparency)
+
+The fourth argument to any color function sets transparency. In the default RGB mode it ranges from 0 (fully transparent) to 255 (fully opaque).
+
+```js
+background(0);
+fill(255, 0, 0, 100); // red, ~40% opaque
+circle(100, 100, 80);
+fill(0, 0, 255, 100); // blue, ~40% opaque
+circle(150, 100, 80); // overlapping circles blend
+```
+
+## The color() object
+
+`color()` creates a reusable `p5.Color` object that can be stored in a variable and passed to `fill()`, `stroke()`, `background()`, etc.
+
+```js
+let sky, sun;
+
+function setup() {
+  createCanvas(400, 300);
+  sky = color(135, 206, 235); // light blue
+  sun = color(255, 220, 0);   // yellow
+}
+
+function draw() {
+  background(sky);
+  fill(sun);
+  circle(200, 80, 80);
+}
+```
+
+## Reading color components
+
+Extract individual channels from a `p5.Color` or from an array:
+
+```js
+let c = color(255, 128, 0, 200);
+
+red(c);        // 255
+green(c);      // 128
+blue(c);       // 0
+alpha(c);      // 200
+
+// In HSB mode:
+colorMode(HSB);
+let h = color(30, 100, 100);
+hue(h);        // 30
+saturation(h); // 100
+brightness(h); // 100
+```
+
+## Blending colors
+
+`lerpColor(c1, c2, amount)` interpolates between two colors. `amount` ranges from 0 (fully `c1`) to 1 (fully `c2`).
+
+```js
+let from = color(255, 0, 0);  // red
+let to   = color(0, 0, 255);  // blue
+
+function draw() {
+  let t = map(mouseX, 0, width, 0, 1);
+  let mid = lerpColor(from, to, t);
+  background(mid);
+}
+```

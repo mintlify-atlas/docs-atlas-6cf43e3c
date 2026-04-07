@@ -1,0 +1,163 @@
+---
+title: "Installation"
+description: "Add p5.js to your project via CDN, npm, or the p5.js Web Editor — choose the method that fits your workflow."
+---
+
+<Info>
+  The current stable release of p5.js is **1.11.12**. All examples on this page use this version.
+</Info>
+
+<Tabs>
+  <Tab title="CDN">
+    The fastest way to use p5.js is to load it from a CDN with a `<script>` tag. No download or installation needed.
+
+    ## Add the script tag
+
+    Include p5.js in your HTML file before your sketch script:
+
+    ```html index.html
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>My Sketch</title>
+      </head>
+      <body>
+        <!-- Load p5.js from CDN -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/p5.min.js"></script>
+
+        <!-- Your sketch file -->
+        <script src="sketch.js"></script>
+      </body>
+    </html>
+    ```
+
+    Place the p5.js `<script>` tag **before** your own sketch script so p5.js is available when your code runs.
+
+    ## Write your sketch
+
+    Create `sketch.js` in the same folder and write your sketch using the global p5.js functions:
+
+    ```js sketch.js
+    function setup() {
+      createCanvas(400, 400);
+      background(220);
+    }
+
+    function draw() {
+      circle(mouseX, mouseY, 50);
+    }
+    ```
+
+    Open `index.html` in a browser to run it.
+
+    <Tip>
+      Use `p5.js` (unminified) instead of `p5.min.js` during development to get readable error messages and stack traces.
+    </Tip>
+  </Tab>
+
+  <Tab title="npm">
+    Install p5.js as a Node.js package when you are using a bundler such as Vite, webpack, or Rollup, or when you are building a framework-based app.
+
+    ## Install the package
+
+    ```bash
+    npm install p5
+    ```
+
+    ## Import p5.js
+
+    <Tabs>
+      <Tab title="ES modules">
+        ```js
+        import p5 from 'p5';
+        ```
+      </Tab>
+      <Tab title="CommonJS">
+        ```js
+        const p5 = require('p5');
+        ```
+      </Tab>
+    </Tabs>
+
+    ## Use instance mode
+
+    When using p5.js with npm, you should use **instance mode** rather than global mode. In instance mode, all p5.js functions are accessed through a `p` object that is passed into your sketch function. This avoids polluting the global scope and is required when running multiple sketches on a page.
+
+    ```js sketch.js
+    import p5 from 'p5';
+
+    const sketch = (p) => {
+      p.setup = () => {
+        p.createCanvas(400, 400);
+        p.background(220);
+      };
+
+      p.draw = () => {
+        p.fill(236, 35, 92);
+        p.noStroke();
+        p.circle(p.mouseX, p.mouseY, 50);
+      };
+
+      p.mousePressed = () => {
+        p.background(220);
+      };
+    };
+
+    // Attach the sketch to a DOM element, or leave blank to append to <body>
+    new p5(sketch, document.getElementById('sketch-container'));
+    ```
+
+    ```html index.html
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>My Sketch</title>
+      </head>
+      <body>
+        <div id="sketch-container"></div>
+        <script type="module" src="sketch.js"></script>
+      </body>
+    </html>
+    ```
+
+    <Note>
+      **Global mode vs instance mode:** Global mode (where `setup`, `draw`, and all p5.js functions are available on `window`) works in CDN-based projects but is not recommended when using npm. With a bundler, global mode can cause naming conflicts and makes it harder to tree-shake unused code. Use instance mode for all npm-based projects. See [Global vs instance mode](/concepts/global-vs-instance) for a full comparison.
+    </Note>
+  </Tab>
+
+  <Tab title="Web Editor">
+    The [p5.js Web Editor](https://editor.p5js.org/) is an online coding environment built specifically for p5.js. It requires no setup, runs entirely in the browser, and includes an instant preview panel.
+
+    ## Getting started
+
+    1. Open [editor.p5js.org](https://editor.p5js.org/) in any modern browser.
+    2. The editor opens with a default sketch already loaded — click **Play** (▶) to run it.
+    3. Edit the code in the left panel and the preview updates in the right panel.
+
+    ## What the web editor includes
+
+    - p5.js pre-loaded — no script tags or installs needed.
+    - A file manager for adding multiple `.js`, image, font, and data files.
+    - Shareable sketch URLs so you can send your work to others.
+    - Optional account creation to save and manage your sketches.
+    - Access to the p5.js sound library (`p5.sound`) in the **Sketch → Add File** menu.
+
+    <Tip>
+      The web editor defaults to p5.js 1.x. If you want to test p5.js 2.0 features, you can manually update the CDN URL in the editor's `index.html` to point to a 2.x release, or use the separate [beta editor](https://beta.p5js.org/).
+    </Tip>
+
+    ## When to use the web editor
+
+    The web editor is ideal for:
+
+    - Learning p5.js without any local setup.
+    - Sharing interactive sketches with others via a URL.
+    - Classroom and workshop environments where everyone needs a consistent setup.
+    - Quick experiments and prototypes.
+
+    For larger projects, storing sketches in version control, or integrating with a web framework, a local setup with the CDN or npm approach is a better fit.
+  </Tab>
+</Tabs>

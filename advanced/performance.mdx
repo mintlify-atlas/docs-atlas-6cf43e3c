@@ -1,0 +1,276 @@
+---
+title: "Performance"
+description: "Techniques for keeping p5.js sketches fast: reducing draw() overhead, using graphics buffers, working with pixels directly, and profiling in the browser."
+---
+
+p5.js runs on top of the browser's 2D Canvas API (or WebGL). The same performance rules that apply to any JavaScript application apply here — minimize work per frame, avoid unnecessary allocations, and measure before optimizing.
+
+## Reducing work in draw()
+
+`draw()` runs up to 60 times per second by default. Anything inside it is executed on every frame.
+
+### Use noLoop() and redraw()
+
+If your sketch does not animate — it draws something once and stops — call `noLoop()` at the end of `setup()`. p5.js will render one frame and then stop calling `draw()`.
+
+```js
+function setup() {
+  createCanvas(800, 600);
+  noLoop();
+}
+
+function draw() {
+  background(240);
+  // Expensive generative art drawn once
+  for (let i = 0; i < 5000; i++) {
+    stroke(random(255), random(255), random(255), 80);
+    line(random(width), random(height), random(width), random(height));
+  }
+}
+```
+
+When you need to trigger a single new frame — for example, in response to user input — call `redraw()`:
+
+```js
+function mousePressed() {
+  redraw(); // draw one more frame
+}
+```
+
+### Avoid allocations inside draw()
+
+JavaScript's garbage collector pauses execution when it reclaims memory. Creating new objects on every frame — arrays, `p5.Vector` instances, string concatenations — puts pressure on the GC.
+
+<Tabs>
+  <Tab title="Slow">
+    ```js
+    function draw() {
+      // A new array is allocated every frame
+      let points = [];
+      for (let i = 0; i < 200; i++) {
+        points.push(createVector(random(width), random(height)));
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Fast">
+    ```js
+    // Allocate once, reuse every frame
+    let points = [];
+    for (let i = 0; i < 200; i++) {
+      points.push(createVector(0, 0));
+}
+
+    function draw() {
+      for (let i = 0; i < points.length; i++) {
+        points[i].x = random(width);
+        points[i].y = random(height);
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+### Reduce the frame rate
+
+If your sketch does not need 60 fps — for example, a slow particle simulation or a data visualization — lower the target with `frameRate()`:
+
+```js
+function setup() {
+  createCanvas(400, 400);
+  frameRate(30); // target 30 fps instead of 60
+}
+```
+
+This halves the CPU and GPU budget consumed per second.
+
+## Graphics buffers with createGraphics()
+
+`createGraphics(w, h)` creates an off-screen canvas — a `p5.Graphics` object — that you can draw to independently and then composite onto the main canvas with `image()`.
+
+This is the single biggest performance tool in p5.js. Use it to:
+
+- Draw a static background once instead of every frame.
+- Separate layers that update at different rates.
+- Pre-compute expensive effects.
+
+```js
+let bg;
+
+function setup() {
+  createCanvas(600, 400);
+
+  // Draw the background once to an off-screen buffer
+  bg = createGraphics(600, 400);
+  bg.background(20);
+  bg.stroke(60);
+  for (let x = 0; x < 600; x += 20) {
+    bg.line(x, 0, x, 400);
+  }
+  for (let y = 0; y < 400; y += 20) {
+    bg.line(0, y, 600, y);
+  }
+}
+
+function draw() {
+  // Stamp the pre-rendered background — one draw call
+  image(bg, 0, 0);
+
+  // Only the moving circle is redrawn each frame
+  fill(255, 80, 80);
+  noStroke();
+  circle(mouseX, mouseY, 40);
+}
+```
+
+`p5.Graphics` supports all the same drawing functions as the main canvas — just prefix calls with your buffer variable: `bg.fill()`, `bg.circle()`, `bg.image()`, and so on.
+
+<Tip>
+`createGraphics()` buffers are not cleared automatically each frame. That is the point — what you draw into them persists until you explicitly call `bg.clear()` or `bg.background()`.
+</Tip>
+
+## Pixel-level operations
+
+When you need to manipulate every pixel directly — image filters, generative textures, cellular automata — use `pixels[]` instead of calling `get()` and `set()` in a loop.
+
+<Steps>
+  <Step title="Call loadPixels()">
+    Populate the `pixels[]` array with the current canvas state:
+
+    ```js
+    loadPixels();
+    ```
+  </Step>
+  <Step title="Read and write pixels[]">
+    Each pixel occupies four consecutive array slots: red, green, blue, alpha. The index of pixel `(x, y)` is `(y * width + x) * 4` (multiply by `pixelDensity()` on high-DPI screens):
+
+    ```js
+    let d = pixelDensity();
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        let index = (x + y * width) * 4 * d * d;
+        pixels[index]     = 255 - pixels[index];     // invert red
+        pixels[index + 1] = 255 - pixels[index + 1]; // invert green
+        pixels[index + 2] = 255 - pixels[index + 2]; // invert blue
+        // pixels[index + 3] is alpha — leave it alone
+      }
+    }
+    ```
+  </Step>
+  <Step title="Call updatePixels()">
+    Flush the modified array back to the canvas:
+
+    ```js
+    updatePixels();
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+`get(x, y)` and `set(x, y, color)` are convenient but slow when called thousands of times per frame. Each call internally loads and uploads pixels. Use `pixels[]` with a single `loadPixels()` / `updatePixels()` pair instead.
+</Warning>
+
+## WebGL performance tips
+
+In WebGL mode the GPU does the heavy lifting, but there are still CPU-side costs to manage.
+
+### Reuse geometry
+
+Do not call `buildGeometry()` or construct `p5.Geometry` objects inside `draw()`. Build them once and store them:
+
+```js
+let myShape;
+
+function setup() {
+  createCanvas(400, 400, WEBGL);
+
+  // Build once
+  myShape = buildGeometry(() => {
+    for (let i = 0; i < 100; i++) {
+      push();
+      translate(random(-150, 150), random(-150, 150), random(-150, 150));
+      sphere(10);
+      pop();
+    }
+  });
+}
+
+function draw() {
+  background(20);
+  orbitControl();
+  model(myShape); // render pre-built geometry
+}
+```
+
+### Minimize shader switches
+
+Switching between shaders or materials mid-frame forces the GPU to flush its pipeline. Group draw calls that share the same material:
+
+```js
+function draw() {
+  background(20);
+
+  // All metallic objects together
+  specularMaterial(200);
+  sphere(50);
+  box(80);
+
+  // All matte objects together
+  noSpecularMaterial();
+  fill(150);
+  torus(60, 15);
+}
+```
+
+### Use texture atlases for images
+
+Binding a new texture is expensive. If your sketch uses many small images, combine them into a single texture atlas and use `texture()` with coordinate offsets.
+
+## Profiling your sketch
+
+Before optimizing, measure. Browser DevTools give you accurate per-frame timing.
+
+<Steps>
+  <Step title="Open the Performance panel">
+    In Chrome or Firefox, open DevTools and navigate to the **Performance** tab.
+  </Step>
+  <Step title="Record while running">
+    Click **Record**, let your sketch run for a few seconds, then stop. The timeline shows CPU flame graphs broken down by function.
+  </Step>
+  <Step title="Look for long frames">
+    Frames that take longer than 16 ms (for 60 fps) appear as red bars. Expand the flame graph under those frames to see which functions are consuming the most time.
+  </Step>
+  <Step title="Check the frame rate overlay">
+    Use `frameRate()` (no arguments) to read the current measured frame rate and display it on the canvas as a diagnostic:
+
+    ```js
+    function draw() {
+      // ... sketch code ...
+      fill(255);
+      noStroke();
+      text(round(frameRate()) + ' fps', 10, 20);
+    }
+    ```
+  </Step>
+</Steps>
+
+## Quick reference
+
+| Technique | When to use |
+|-----------|-------------|
+| `noLoop()` | Static sketches that draw once |
+| `redraw()` | One new frame on demand |
+| `frameRate(n)` | Animations that do not need 60 fps |
+| `createGraphics()` | Static layers, expensive effects computed once |
+| `pixels[]` array | Per-pixel manipulation at scale |
+| `buildGeometry()` | Reusable 3D geometry in WebGL mode |
+| DevTools Performance panel | Finding the actual bottleneck |
+
+<CardGroup cols={2}>
+  <Card title="WebGL and 3D" icon="cube" href="/webgl/getting-started-3d">
+    Learn the basics of WebGL mode before optimizing 3D sketches.
+  </Card>
+  <Card title="Accessibility" icon="universal-access" href="/advanced/accessibility">
+    Make sure your optimized sketch is still accessible to all users.
+  </Card>
+</CardGroup>

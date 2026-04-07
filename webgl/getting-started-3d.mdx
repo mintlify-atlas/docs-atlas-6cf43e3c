@@ -1,0 +1,179 @@
+---
+title: "Getting started with 3D"
+description: "Enable WebGL mode in p5.js to draw 3D primitives, control the camera, and animate objects in three dimensions."
+---
+
+WebGL mode unlocks 3D rendering in p5.js by giving your sketch direct access to the GPU. You activate it with a single argument to `createCanvas()` and then use the same familiar p5.js workflow you already know.
+
+## Enabling WebGL mode
+
+Pass the `WEBGL` constant as the third argument to `createCanvas()`:
+
+```js
+function setup() {
+  createCanvas(400, 400, WEBGL);
+}
+```
+
+<Note>
+In WebGL mode the origin `(0, 0, 0)` is at the **center** of the canvas, not the top-left corner. Positive X points right, positive Y points down, and positive Z points toward the viewer.
+</Note>
+
+## Drawing 3D primitives
+
+p5.js includes six built-in 3D primitives. Call them inside `draw()` after any transforms you want to apply.
+
+### Box
+
+```js
+box(width, height, depth);
+// or use a single size for a cube:
+box(size);
+```
+
+### Sphere
+
+```js
+sphere(radius, detailX, detailY);
+```
+
+`detailX` and `detailY` control how many triangle subdivisions the sphere has. Higher values produce a smoother surface at the cost of performance.
+
+### Cylinder
+
+```js
+cylinder(radius, height, detailX);
+```
+
+### Cone
+
+```js
+cone(radius, height);
+```
+
+### Torus
+
+```js
+torus(radius, tubeRadius);
+```
+
+`radius` is the distance from the center of the torus to the center of the tube; `tubeRadius` is the radius of the tube itself.
+
+### Plane
+
+```js
+plane(width, height);
+```
+
+A flat rectangular surface, useful as a floor or backdrop.
+
+## Rotating objects
+
+Three rotation functions map directly to the three axes:
+
+```js
+rotateX(angle); // tilt forward/backward
+rotateY(angle); // spin left/right
+rotateZ(angle); // roll clockwise/counter-clockwise
+```
+
+Angles are in radians by default. Use `angleMode(DEGREES)` if you prefer degrees.
+
+Transforms accumulate, so wrap them in `push()` and `pop()` to keep them scoped to a single shape:
+
+```js
+function draw() {
+  background(30);
+
+  push();
+  rotateX(frameCount * 0.01);
+  rotateY(frameCount * 0.02);
+  box(80);
+  pop();
+}
+```
+
+## Camera control
+
+### Positioning the camera manually
+
+```js
+camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
+```
+
+| Parameter | Meaning | Default |
+|-----------|---------|---------|
+| `eyeX/Y/Z` | Camera position | `0, 0, 800` |
+| `centerX/Y/Z` | Point the camera looks at | `0, 0, 0` |
+| `upX/Y/Z` | "Up" direction vector | `0, 1, 0` |
+
+All parameters are optional; omit them to restore the defaults.
+
+### Projection modes
+
+**Perspective** (default) — objects farther away appear smaller, giving a natural sense of depth:
+
+```js
+perspective(fovy, aspect, near, far);
+```
+
+**Orthographic** — no foreshortening; parallel lines stay parallel regardless of distance:
+
+```js
+ortho(left, right, bottom, top, near, far);
+```
+
+### Interactive orbit with orbitControl()
+
+`orbitControl()` wires up mouse and touch input so viewers can rotate, pan, and zoom the scene without any manual camera math:
+
+```js
+function draw() {
+  background(30);
+  orbitControl(); // call at the top of draw()
+  box(80);
+}
+```
+
+<Tip>
+Call `orbitControl()` before drawing any geometry so the camera transform is applied to everything in the frame.
+</Tip>
+
+## 2D drawing functions in WebGL mode
+
+Most 2D p5.js functions — `ellipse()`, `rect()`, `text()`, `image()`, and so on — still work in WebGL mode. They are rendered flat on the z = 0 plane. You can move them into 3D space by applying `translate()` and rotations before calling them.
+
+## Complete example
+
+The following sketch draws a rotating box with mouse-controlled orbit and a warm directional light:
+
+```js
+function setup() {
+  createCanvas(400, 400, WEBGL);
+}
+
+function draw() {
+  background(30);
+
+  // Let the viewer orbit with the mouse
+  orbitControl();
+
+  // Gentle auto-rotation
+  rotateX(frameCount * 0.005);
+  rotateY(frameCount * 0.01);
+
+  // Style and draw
+  noStroke();
+  fill(200, 100, 50);
+  box(120);
+}
+```
+
+<CardGroup cols={2}>
+  <Card title="Lights and materials" icon="lightbulb" href="/webgl/lights-materials">
+    Add lighting and surface materials to your 3D scene.
+  </Card>
+  <Card title="Custom shaders" icon="code" href="/webgl/shaders">
+    Write GLSL shaders to fully control how geometry is rendered.
+  </Card>
+</CardGroup>

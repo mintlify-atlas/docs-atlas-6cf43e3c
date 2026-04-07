@@ -1,0 +1,421 @@
+---
+title: "p5.Vector"
+description: "A class for 2D and 3D vector math, useful for simulating physics, motion, and forces."
+---
+
+A `p5.Vector` represents a two- or three-dimensional vector: a quantity with both **magnitude** (length) and **direction**. Vectors simplify the math behind motion, physics simulations, and geometry. A moving object can be modeled as a position vector and a velocity vector; each frame you add velocity to position and the object moves.
+
+<Note>
+`createVector(x, y, z)` is the recommended way to create a vector inside a sketch. `new p5.Vector(x, y, z)` also works and is equivalent.
+</Note>
+
+## Constructor
+
+```js
+createVector(x, y, z)
+new p5.Vector(x, y, z)
+```
+
+<ParamField path="x" type="Number">
+  The x component. Defaults to `0`.
+</ParamField>
+
+<ParamField path="y" type="Number">
+  The y component. Defaults to `0`.
+</ParamField>
+
+<ParamField path="z" type="Number">
+  The z component. Defaults to `0`. Omit for 2D vectors.
+</ParamField>
+
+**Returns** `p5.Vector`
+
+## Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `.x` | Number | The x component of the vector. |
+| `.y` | Number | The y component of the vector. |
+| `.z` | Number | The z component of the vector. |
+
+---
+
+## Instance methods
+
+All instance methods modify the vector **in place** and return `this` (chainable), unless noted otherwise.
+
+### `.set(x, y, z?)`
+
+Sets the vector's components. Accepts separate numbers, a `p5.Vector`, or an array. Unspecified components are set to `0`.
+
+```js
+v.set(10, 20);       // set x=10, y=20, z=0
+v.set(other);        // copy from another p5.Vector
+v.set([10, 20, 30]); // set from array
+```
+
+<ParamField path="x" type="Number | p5.Vector | Number[]">
+  x component, or a vector/array to copy from.
+</ParamField>
+
+<ParamField path="y" type="Number">
+  y component (when passing numbers individually).
+</ParamField>
+
+<ParamField path="z" type="Number">
+  z component (when passing numbers individually).
+</ParamField>
+
+---
+
+### `.copy()`
+
+Returns a new `p5.Vector` with the same components. The original is not modified.
+
+```js
+let v2 = v.copy();
+```
+
+**Returns** `p5.Vector`
+
+---
+
+### `.add(x, y?, z?)` / `.add(v)`
+
+Adds to the vector's components. Accepts numbers, a `p5.Vector`, or an array. Unspecified components are unchanged.
+
+```js
+pos.add(vel);           // add another vector
+pos.add(1, -2);         // add x and y components
+pos.add([0, 0, 1]);     // add from array
+```
+
+<ParamField path="x" type="Number | p5.Vector | Number[]">
+  x component to add, or a vector/array.
+</ParamField>
+
+<ParamField path="y" type="Number">
+  y component to add.
+</ParamField>
+
+<ParamField path="z" type="Number">
+  z component to add.
+</ParamField>
+
+---
+
+### `.sub(x, y?, z?)` / `.sub(v)`
+
+Subtracts from the vector's components.
+
+```js
+v.sub(other);    // subtract another vector
+v.sub(5, 3);     // subtract x and y
+```
+
+<ParamField path="x" type="Number | p5.Vector | Number[]">
+  x component to subtract, or a vector/array.
+</ParamField>
+
+<ParamField path="y" type="Number">
+  y component to subtract.
+</ParamField>
+
+<ParamField path="z" type="Number">
+  z component to subtract.
+</ParamField>
+
+---
+
+### `.mult(n)` / `.mult(v)`
+
+Multiplies the vector's components by a scalar or component-wise by another vector (or array). When a single number is passed, all components are scaled by that number.
+
+```js
+v.mult(2);         // double all components
+v.mult(2, 3);      // x *= 2, y *= 3
+v.mult(other);     // component-wise multiply
+```
+
+<ParamField path="n" type="Number | p5.Vector | Number[]">
+  Scalar multiplier, or a vector/array for component-wise multiplication.
+</ParamField>
+
+---
+
+### `.div(n)` / `.div(v)`
+
+Divides the vector's components by a scalar or component-wise by another vector.
+
+```js
+v.div(2);       // halve all components
+v.div(other);   // component-wise divide
+```
+
+<ParamField path="n" type="Number | p5.Vector | Number[]">
+  Scalar divisor, or a vector/array for component-wise division.
+</ParamField>
+
+---
+
+### `.mag()`
+
+Returns the magnitude (length) of the vector: `sqrt(x² + y² + z²)`.
+
+```js
+let speed = vel.mag();
+```
+
+**Returns** `Number`
+
+---
+
+### `.magSq()`
+
+Returns the magnitude squared (`x² + y² + z²`). Faster than `.mag()` because it skips the square root — useful when you only need to compare lengths.
+
+```js
+if (v.magSq() > 10000) { /* faster than v.mag() > 100 */ }
+```
+
+**Returns** `Number`
+
+---
+
+### `.normalize()`
+
+Scales the vector to unit length (magnitude 1) while preserving its direction. Has no effect on the zero vector.
+
+```js
+let dir = vel.copy().normalize();
+```
+
+---
+
+### `.setMag(n)`
+
+Sets the vector's magnitude to `n` while preserving its direction. Equivalent to `normalize()` then `mult(n)`.
+
+```js
+vel.setMag(5); // set speed to 5
+```
+
+<ParamField path="n" type="Number">
+  The desired magnitude.
+</ParamField>
+
+---
+
+### `.limit(max)`
+
+Limits the vector's magnitude to `max`. If the current magnitude is already less than `max`, the vector is unchanged.
+
+```js
+vel.limit(3); // cap speed at 3
+```
+
+<ParamField path="max" type="Number">
+  Maximum magnitude.
+</ParamField>
+
+---
+
+### `.dist(v)`
+
+Returns the Euclidean distance between this vector and `v`, treating each as a point in space.
+
+```js
+let d = pos.dist(target);
+```
+
+<ParamField path="v" type="p5.Vector">
+  The other vector.
+</ParamField>
+
+**Returns** `Number`
+
+---
+
+### `.dot(v)`
+
+Returns the dot product of this vector and `v`. The dot product equals `|a| * |b| * cos(θ)`, where `θ` is the angle between the vectors.
+
+```js
+let alignment = forward.dot(velocity); // positive = same direction
+```
+
+<ParamField path="v" type="p5.Vector">
+  The other vector.
+</ParamField>
+
+**Returns** `Number`
+
+---
+
+### `.cross(v)`
+
+Returns the cross product of this vector and `v` as a new `p5.Vector`. The result is perpendicular to both. Meaningful in 3D; for 2D vectors, the z component of the result gives the signed area of the parallelogram.
+
+```js
+let perp = a.cross(b);
+```
+
+<ParamField path="v" type="p5.Vector">
+  The other vector.
+</ParamField>
+
+**Returns** `p5.Vector`
+
+---
+
+### `.lerp(v, amt)`
+
+Linearly interpolates this vector toward `v` by amount `amt`. `amt = 0` returns the original, `amt = 1` returns `v`.
+
+```js
+pos.lerp(target, 0.1); // move 10% of the way toward target each frame
+```
+
+<ParamField path="v" type="p5.Vector">
+  The target vector to interpolate toward.
+</ParamField>
+
+<ParamField path="amt" type="Number">
+  Interpolation amount between `0.0` and `1.0`.
+</ParamField>
+
+---
+
+### `.heading()`
+
+Returns the direction of the vector as an angle (in the current angle mode, radians by default). Equivalent to `atan2(y, x)`.
+
+```js
+let angle = vel.heading();
+```
+
+**Returns** `Number`
+
+---
+
+### `.rotate(angle)`
+
+Rotates the 2D vector by `angle` (in the current angle mode). The z component is ignored.
+
+```js
+vel.rotate(HALF_PI); // turn 90 degrees
+```
+
+<ParamField path="angle" type="Number">
+  Angle to rotate by.
+</ParamField>
+
+---
+
+### `.angleBetween(v)`
+
+Returns the angle between this vector and `v`. The result is always in the range `[-PI, PI]`.
+
+```js
+let theta = v1.angleBetween(v2);
+```
+
+<ParamField path="v" type="p5.Vector">
+  The other vector.
+</ParamField>
+
+**Returns** `Number`
+
+---
+
+### `.toString()`
+
+Returns a human-readable string representation. Useful for debugging with `print()`.
+
+```js
+print(v.toString()); // "p5.Vector Object : [10, 20, 0]"
+```
+
+**Returns** `String`
+
+---
+
+## Static methods
+
+Static methods **do not modify** their arguments. They return a new `p5.Vector`.
+
+```js
+// Instance method — modifies v1 in place:
+v1.add(v2);
+
+// Static method — returns a new vector, v1 and v2 unchanged:
+let v3 = p5.Vector.add(v1, v2);
+```
+
+| Method | Description |
+|--------|-------------|
+| `p5.Vector.add(v1, v2)` | Returns `v1 + v2`. |
+| `p5.Vector.sub(v1, v2)` | Returns `v1 - v2`. |
+| `p5.Vector.mult(v, n)` | Returns `v` scaled by `n`. |
+| `p5.Vector.div(v, n)` | Returns `v` divided by `n`. |
+| `p5.Vector.dist(v1, v2)` | Returns the distance between `v1` and `v2`. |
+| `p5.Vector.dot(v1, v2)` | Returns the dot product. |
+| `p5.Vector.cross(v1, v2)` | Returns the cross product. |
+| `p5.Vector.lerp(v1, v2, amt)` | Returns the interpolated vector. |
+| `p5.Vector.fromAngle(angle, length?)` | Creates a 2D vector from an angle and optional length (default `1`). |
+| `p5.Vector.random2D()` | Returns a random 2D unit vector. |
+| `p5.Vector.random3D()` | Returns a random 3D unit vector. |
+
+### `p5.Vector.fromAngle(angle, length?)`
+
+Creates a new 2D unit vector pointing in the direction of `angle`.
+
+```js
+let v = p5.Vector.fromAngle(PI / 4);    // 45-degree direction
+let v2 = p5.Vector.fromAngle(0, 5);     // pointing right, length 5
+```
+
+<ParamField path="angle" type="Number">
+  Angle in radians (or current angle mode).
+</ParamField>
+
+<ParamField path="length" type="Number">
+  Magnitude of the resulting vector. Defaults to `1`.
+</ParamField>
+
+**Returns** `p5.Vector`
+
+---
+
+## Example: bouncing ball
+
+```js
+let pos, vel;
+
+function setup() {
+  createCanvas(400, 400);
+
+  pos = createVector(width / 2, height / 2);
+  vel = p5.Vector.fromAngle(PI / 4, 3); // 45° at speed 3
+}
+
+function draw() {
+  background(30);
+
+  // Move the ball
+  pos.add(vel);
+
+  // Bounce off edges
+  if (pos.x < 10 || pos.x > width - 10) vel.x *= -1;
+  if (pos.y < 10 || pos.y > height - 10) vel.y *= -1;
+
+  // Draw the ball
+  fill(255);
+  noStroke();
+  circle(pos.x, pos.y, 20);
+}
+```
+
+<Tip>
+Use `p5.Vector.fromAngle()` and `random2D()` to generate initial velocities without manually calculating sine and cosine.
+</Tip>

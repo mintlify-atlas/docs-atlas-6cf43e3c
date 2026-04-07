@@ -1,0 +1,326 @@
+---
+title: "Mouse and keyboard input"
+description: "Read mouse position, button state, and keyboard input to make your sketches interactive."
+---
+
+p5.js provides a set of system variables and callback functions that let you respond to mouse and keyboard input. You read variables like `mouseX` and `key` inside `draw()`, and define callback functions like `mousePressed()` that p5.js calls automatically when an event occurs.
+
+## Mouse input
+
+### Position variables
+
+These variables are updated every frame and are always available inside `draw()`.
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `mouseX` | `Number` | Horizontal position of the mouse relative to the canvas top-left corner. |
+| `mouseY` | `Number` | Vertical position of the mouse relative to the canvas top-left corner. |
+| `pmouseX` | `Number` | `mouseX` value from the previous frame. |
+| `pmouseY` | `Number` | `mouseY` value from the previous frame. |
+| `movedX` | `Number` | Pixels the mouse moved horizontally since the last frame. Equivalent to `mouseX - pmouseX`. |
+| `movedY` | `Number` | Pixels the mouse moved vertically since the last frame. Equivalent to `mouseY - pmouseY`. |
+
+Use `pmouseX` and `pmouseY` together with the current position to draw smooth brush strokes:
+
+```js
+function setup() {
+  createCanvas(400, 400);
+  background(255);
+  strokeWeight(4);
+}
+
+function draw() {
+  // Draw a line from the previous position to the current one.
+  line(pmouseX, pmouseY, mouseX, mouseY);
+}
+```
+
+### Button state variables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `mouseIsPressed` | `Boolean` | `true` while any mouse button is held down. |
+| `mouseButton` | `String` | Which button is pressed: `LEFT`, `RIGHT`, or `CENTER`. |
+
+```js
+function draw() {
+  background(220);
+
+  if (mouseIsPressed) {
+    if (mouseButton === LEFT) {
+      fill(255, 0, 0);
+    } else if (mouseButton === RIGHT) {
+      fill(0, 0, 255);
+    } else {
+      fill(0, 255, 0);
+    }
+    circle(mouseX, mouseY, 40);
+  }
+}
+```
+
+### Mouse event callbacks
+
+Define any of these functions in your sketch and p5.js will call them automatically when the corresponding event fires.
+
+<AccordionGroup>
+  <Accordion title="mousePressed()">
+    Called once when a mouse button is pressed.
+
+    ```js
+    function mousePressed() {
+      // Runs once per press, not every frame.
+      background(random(255), random(255), random(255));
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="mouseReleased()">
+    Called once when a mouse button is released.
+
+    ```js
+    function mouseReleased() {
+      console.log('Button released at', mouseX, mouseY);
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="mouseClicked()">
+    Called once after a button is pressed and released at the same position. Use this instead of `mousePressed()` when you want a full click gesture.
+
+    ```js
+    function mouseClicked() {
+      // Fires after press + release.
+      circle(mouseX, mouseY, 20);
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="mouseMoved()">
+    Called every frame the mouse moves while no button is held.
+
+    ```js
+    function mouseMoved() {
+      // Track movement without clicking.
+      point(mouseX, mouseY);
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="mouseDragged()">
+    Called every frame the mouse moves while a button is held down. Use this for drag-to-draw interactions.
+
+    ```js
+    function mouseDragged() {
+      line(pmouseX, pmouseY, mouseX, mouseY);
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="mouseWheel(event)">
+    Called when the scroll wheel moves. The `event` parameter has a `delta` property: positive values scroll down, negative values scroll up.
+
+    ```js
+    let brushSize = 10;
+
+    function mouseWheel(event) {
+      brushSize += event.delta * 0.1;
+      brushSize = constrain(brushSize, 2, 80);
+    }
+
+    function draw() {
+      if (mouseIsPressed) {
+        circle(mouseX, mouseY, brushSize);
+      }
+    }
+    ```
+
+    <Tip>Return `false` from `mouseWheel()` to prevent the page from scrolling while the user interacts with your canvas.</Tip>
+  </Accordion>
+</AccordionGroup>
+
+### Interactive drawing example
+
+This sketch lets you paint by dragging the mouse and clear the canvas by double-clicking.
+
+```js
+let painting = false;
+
+function setup() {
+  createCanvas(600, 400);
+  background(30);
+  stroke(255);
+  strokeWeight(3);
+  noFill();
+}
+
+function mouseDragged() {
+  line(pmouseX, pmouseY, mouseX, mouseY);
+}
+
+function mouseClicked() {
+  // Double-click detection using frameCount isn't reliable;
+  // use a timestamp instead.
+}
+
+function doubleClicked() {
+  background(30);
+}
+```
+
+---
+
+## Keyboard input
+
+### Keyboard state variables
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `keyIsPressed` | `Boolean` | `true` while any key is currently held down. |
+| `key` | `String` | The character value of the last key pressed (e.g. `"a"`, `"A"`, `"5"`). Not updated for special keys. |
+| `keyCode` | `Number` | The numeric code of the last key pressed. Use this for special keys like arrows. |
+
+### Key code constants
+
+p5.js defines named constants for keys that don't produce a printable character.
+
+<CardGroup cols={3}>
+  <Card title="Navigation" icon="arrow-up">
+    `UP_ARROW`, `DOWN_ARROW`, `LEFT_ARROW`, `RIGHT_ARROW`
+  </Card>
+  <Card title="Editing" icon="delete-left">
+    `BACKSPACE`, `DELETE`, `ENTER`, `RETURN`, `TAB`, `ESCAPE`
+  </Card>
+  <Card title="Modifiers" icon="keyboard">
+    `SHIFT`, `CONTROL`, `ALT`, `OPTION`
+  </Card>
+</CardGroup>
+
+### Keyboard event callbacks
+
+<AccordionGroup>
+  <Accordion title="keyPressed()">
+    Called once each time any key is pressed. Check `key` for printable characters or `keyCode` for special keys.
+
+    ```js
+    function keyPressed() {
+      if (key === ' ') {
+        background(200); // Clear on spacebar.
+      }
+      if (keyCode === ESCAPE) {
+        noLoop();
+      }
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="keyReleased()">
+    Called once each time a key is released.
+
+    ```js
+    function keyReleased() {
+      console.log(key, 'was released');
+    }
+    ```
+  </Accordion>
+
+  <Accordion title="keyTyped()">
+    Called once for each printable character typed. Special keys like `SHIFT` and `ESCAPE` do not trigger `keyTyped()`.
+
+    ```js
+    let typed = '';
+
+    function keyTyped() {
+      typed += key;
+    }
+
+    function draw() {
+      background(220);
+      text(typed, 10, 50);
+    }
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### keyIsDown()
+
+Use `keyIsDown(keyCode)` inside `draw()` to check whether a specific key is currently held. This lets you handle multiple keys pressed at the same time, which the `keyCode` variable alone cannot do.
+
+```js
+keyIsDown(keyCode)  // returns true or false
+```
+
+### Moving a shape with arrow keys
+
+<Steps>
+  <Step title="Declare position variables">
+    ```js
+    let x = 200;
+    let y = 200;
+    const speed = 3;
+    ```
+  </Step>
+
+  <Step title="Check keys inside draw()">
+    ```js
+    function draw() {
+      background(220);
+
+      if (keyIsDown(UP_ARROW))    y -= speed;
+      if (keyIsDown(DOWN_ARROW))  y += speed;
+      if (keyIsDown(LEFT_ARROW))  x -= speed;
+      if (keyIsDown(RIGHT_ARROW)) x += speed;
+
+      // Keep the shape inside the canvas.
+      x = constrain(x, 0, width);
+      y = constrain(y, 0, height);
+
+      circle(x, y, 30);
+    }
+    ```
+
+    Using `keyIsDown()` inside `draw()` instead of `keyPressed()` means the shape moves continuously while the key is held, not just on the initial press.
+  </Step>
+</Steps>
+
+<Note>
+  The canvas must be focused to receive keyboard events. If keyboard input isn't working, click once on the canvas to focus it.
+</Note>
+
+---
+
+## Putting it together
+
+This sketch combines mouse and keyboard input. Draw with the mouse, hold `S` to switch brush color, and press `BACKSPACE` to clear.
+
+```js
+let brushColor;
+
+function setup() {
+  createCanvas(600, 400);
+  background(255);
+  brushColor = color(0);
+  strokeWeight(4);
+  noFill();
+}
+
+function mouseDragged() {
+  stroke(brushColor);
+  line(pmouseX, pmouseY, mouseX, mouseY);
+}
+
+function keyPressed() {
+  if (keyCode === BACKSPACE) {
+    background(255);
+  }
+}
+
+function draw() {
+  if (keyIsDown(83)) {
+    // 83 is the keyCode for 'S'.
+    brushColor = color(255, 0, 100);
+  } else {
+    brushColor = color(0);
+  }
+}
+```

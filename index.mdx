@@ -1,97 +1,82 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "p5.js — Creative Coding for the Web"
+description: "A JavaScript library that makes it easy to draw, animate, and build interactive graphics in the browser. Built for artists, designers, educators, and anyone who wants to express themselves creatively with code."
 ---
 
-## Setting up
+p5.js is a free, open-source JavaScript library for creative coding. It gives you a full set of drawing tools for the web — from 2D shapes and color to 3D WebGL graphics — wrapped in a friendly, beginner-accessible API inspired by Processing.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Draw your first sketch in under five minutes — no build tools needed.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Installation" icon="download" href="/installation">
+    Add p5.js to your project via CDN, npm, or the web editor.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Core Concepts" icon="lightbulb" href="/concepts/sketch-lifecycle">
+    Understand the setup/draw loop, coordinate system, and color model.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="API Reference" icon="code" href="/reference/structure/setup">
+    Explore every function, class, and constant in the p5.js API.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What you can build
 
-Everything you need to create world-class documentation.
+p5.js handles drawing, animation, interactivity, media, and 3D — all in the browser with plain JavaScript.
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+<CardGroup cols={3}>
+  <Card title="2D Drawing" icon="pen-nib" href="/drawing/shapes">
+    Shapes, curves, images, and typography on an HTML canvas.
   </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+  <Card title="Animation" icon="play" href="/concepts/sketch-lifecycle">
+    The draw loop runs up to 60 frames per second for smooth motion.
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
+  <Card title="Interactivity" icon="computer-mouse" href="/interactivity/mouse-keyboard">
+    Respond to mouse, keyboard, and touch input.
   </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+  <Card title="Media Loading" icon="image" href="/media/images">
+    Load images, fonts, JSON, CSV tables, and more.
   </Card>
-</Columns>
+  <Card title="WebGL & 3D" icon="cube" href="/webgl/getting-started-3d">
+    Lights, materials, cameras, and custom GLSL shaders.
+  </Card>
+  <Card title="Addon Libraries" icon="puzzle-piece" href="/advanced/extending-p5">
+    Extend p5.js with community libraries or build your own.
+  </Card>
+</CardGroup>
 
-## Need inspiration?
+## Get started in three steps
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Steps>
+  <Step title="Include p5.js">
+    Add p5.js to your HTML page via the CDN — no installation required.
+    ```html index.html
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/p5.min.js"></script>
+    ```
+  </Step>
+  <Step title="Write your sketch">
+    Define `setup()` to initialize your canvas and `draw()` to render each frame.
+    ```js sketch.js
+    function setup() {
+      createCanvas(400, 400);
+      background(220);
+    }
+
+    function draw() {
+      if (mouseIsPressed) {
+        fill(0);
+      } else {
+        fill(255);
+      }
+      circle(mouseX, mouseY, 80);
+    }
+    ```
+  </Step>
+  <Step title="Open in a browser">
+    Open your HTML file in any modern browser and start drawing. No server needed.
+  </Step>
+</Steps>
+
+<Tip>
+  Try p5.js instantly in the [p5.js Web Editor](https://editor.p5js.org/) — no setup required.
+</Tip>

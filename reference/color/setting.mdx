@@ -1,0 +1,481 @@
+---
+title: "Color Settings"
+description: "Functions to set the background, fill, stroke, stroke weight, caps, joins, color mode, and erase mode for the canvas."
+---
+
+Color setting functions control how shapes are drawn. They affect all subsequent drawing calls until changed again. Settings persist across frames unless you reset them inside `draw()`.
+
+---
+
+## background
+
+Sets the color used for the canvas background.
+
+Calling `background()` is typically the first thing inside `draw()` to clear the previous frame. It can also be called inside `setup()` to set an initial background.
+
+Accepts:
+- A grayscale value (`background(51)`)
+- RGB or HSB/HSL components (`background(255, 204, 0)`)
+- A CSS color string (`background('#fae')`, `background('red')`)
+- A `p5.Color` object (`background(c)`)
+- A `p5.Image` object (must match canvas dimensions)
+
+**Signatures**
+
+```js
+background(color)                      // p5.Color object
+background(colorstring, [a])           // CSS string
+background(gray, [a])                  // grayscale 0–255
+background(v1, v2, v3, [a])            // RGB / HSB / HSL components
+background(values)                     // array [r, g, b, a]
+background(image, [a])                 // p5.Image
+```
+
+<ParamField path="color" type="p5.Color">
+  A color object created with `color()`.
+</ParamField>
+
+<ParamField path="colorstring" type="String">
+  A CSS color string. Supports named colors, hex (`#rgb`, `#rrggbb`), `rgb()`, `rgba()`, `hsl()`, `hsla()`, and percentage variants.
+</ParamField>
+
+<ParamField path="gray" type="Number">
+  A grayscale value between 0 (black) and 255 (white).
+</ParamField>
+
+<ParamField path="v1" type="Number">
+  Red value in RGB mode, or hue in HSB/HSL mode.
+</ParamField>
+
+<ParamField path="v2" type="Number">
+  Green value in RGB mode, or saturation in HSB/HSL mode.
+</ParamField>
+
+<ParamField path="v3" type="Number">
+  Blue value in RGB mode, or brightness/lightness in HSB/HSL mode.
+</ParamField>
+
+<ParamField path="a" type="Number">
+  Alpha (opacity) value within the current color range (default 0–255).
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  // Yellow background
+  background(255, 204, 0);
+}
+
+function draw() {
+  // Clear with a semi-transparent dark background each frame
+  background(0, 0, 0, 40);
+  fill(255);
+  circle(mouseX, mouseY, 20);
+}
+```
+
+---
+
+## fill
+
+Sets the color used to fill shapes.
+
+All shapes drawn after `fill()` will use that color until it is changed with another `fill()` call or disabled with `noFill()`.
+
+**Signatures**
+
+```js
+fill(color)                   // p5.Color object
+fill(colorstring)             // CSS color string
+fill(gray, [alpha])           // grayscale
+fill(v1, v2, v3, [alpha])     // RGB / HSB / HSL
+fill(values)                  // array [r, g, b, a]
+```
+
+<ParamField path="v1" type="Number" required>
+  Red (RGB mode) or hue (HSB/HSL mode).
+</ParamField>
+
+<ParamField path="v2" type="Number" required>
+  Green (RGB mode) or saturation (HSB/HSL mode).
+</ParamField>
+
+<ParamField path="v3" type="Number" required>
+  Blue (RGB mode) or brightness/lightness (HSB/HSL mode).
+</ParamField>
+
+<ParamField path="alpha" type="Number">
+  Alpha value (0 = fully transparent, 255 = fully opaque by default).
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Solid yellow fill
+  fill(255, 204, 0);
+  square(10, 10, 35);
+
+  // Semi-transparent red fill
+  fill(255, 0, 0, 128);
+  square(55, 10, 35);
+
+  // CSS color string
+  fill('steelblue');
+  square(10, 55, 35);
+
+  // Hex color
+  fill('#9b59b6');
+  square(55, 55, 35);
+}
+```
+
+---
+
+## noFill
+
+Disables filling shapes.
+
+Equivalent to `fill(0, 0)`. If both `noFill()` and `noStroke()` are active, nothing is drawn.
+
+**Signature**
+
+```js
+noFill()
+```
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Filled square
+  square(20, 10, 55);
+
+  // Outline-only square
+  noFill();
+  square(20, 55, 55);
+}
+```
+
+---
+
+## stroke
+
+Sets the color used for lines and shape outlines.
+
+All shapes drawn after `stroke()` will use that color until changed or disabled with `noStroke()`.
+
+**Signatures**
+
+```js
+stroke(color)                   // p5.Color object
+stroke(colorstring)             // CSS color string
+stroke(gray, [alpha])           // grayscale
+stroke(v1, v2, v3, [alpha])     // RGB / HSB / HSL
+stroke(values)                  // array [r, g, b, a]
+```
+
+<ParamField path="v1" type="Number" required>
+  Red (RGB mode) or hue (HSB/HSL mode).
+</ParamField>
+
+<ParamField path="v2" type="Number" required>
+  Green (RGB mode) or saturation (HSB/HSL mode).
+</ParamField>
+
+<ParamField path="v3" type="Number" required>
+  Blue (RGB mode) or brightness/lightness (HSB/HSL mode).
+</ParamField>
+
+<ParamField path="alpha" type="Number">
+  Alpha value.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  strokeWeight(4);
+
+  stroke(255, 0, 0);       // red outline
+  square(10, 10, 35);
+
+  stroke('navy');           // CSS named color
+  square(55, 10, 35);
+
+  stroke('#00ff99');        // hex
+  square(10, 55, 35);
+
+  stroke(0, 100, 255, 180); // semi-transparent blue
+  square(55, 55, 35);
+}
+```
+
+---
+
+## noStroke
+
+Disables drawing outlines and lines.
+
+Equivalent to `stroke(0, 0)`. If both `noStroke()` and `noFill()` are active, nothing is drawn.
+
+**Signature**
+
+```js
+noStroke()
+```
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  noStroke();
+  fill(255, 150, 0);
+  circle(50, 50, 60);
+}
+```
+
+---
+
+## strokeWeight
+
+Sets the width of drawn lines and the outlines of shapes, in pixels.
+
+**Signature**
+
+```js
+strokeWeight(weight)
+```
+
+<ParamField path="weight" type="Number" required>
+  Stroke width in pixels. Default is `1`.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  strokeWeight(1);
+  line(10, 20, 90, 20);
+
+  strokeWeight(4);
+  line(10, 40, 90, 40);
+
+  strokeWeight(10);
+  line(10, 65, 90, 65);
+}
+```
+
+---
+
+## strokeCap
+
+Sets the style for the endpoints of lines and the start and end of `strokeWeight`-ed points.
+
+| Constant | Effect |
+| --- | --- |
+| `ROUND` | Rounded caps (default) |
+| `SQUARE` | Square caps that end exactly at the coordinates |
+| `PROJECT` | Square caps that extend half the stroke width beyond the coordinates |
+
+**Signature**
+
+```js
+strokeCap(cap)
+```
+
+<ParamField path="cap" type="Constant" required>
+  `ROUND`, `SQUARE`, or `PROJECT`.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  strokeWeight(12);
+
+  strokeCap(ROUND);
+  line(20, 30, 80, 30);
+
+  strokeCap(SQUARE);
+  line(20, 50, 80, 50);
+
+  strokeCap(PROJECT);
+  line(20, 70, 80, 70);
+}
+```
+
+---
+
+## strokeJoin
+
+Sets the style for the corners where two lines meet.
+
+| Constant | Effect |
+| --- | --- |
+| `MITER` | Sharp pointy join (default) |
+| `BEVEL` | Flat cut-off join |
+| `ROUND` | Rounded join |
+
+**Signature**
+
+```js
+strokeJoin(join)
+```
+
+<ParamField path="join" type="Constant" required>
+  `MITER`, `BEVEL`, or `ROUND`.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  strokeWeight(10);
+  noFill();
+
+  strokeJoin(MITER);
+  rect(10, 5, 35, 35);
+
+  strokeJoin(BEVEL);
+  rect(55, 5, 35, 35);
+
+  strokeJoin(ROUND);
+  rect(10, 55, 35, 35);
+}
+```
+
+---
+
+## colorMode
+
+Changes how numeric color values are interpreted by `fill()`, `stroke()`, `background()`, and `color()`.
+
+By default, colors use the RGB model with values in the range 0–255. `colorMode()` lets you switch to HSB or HSL and optionally change the maximum value for each channel.
+
+**Signatures**
+
+```js
+colorMode(mode, [max])
+colorMode(mode, max1, max2, max3, [maxA])
+```
+
+<ParamField path="mode" type="Constant" required>
+  `RGB`, `HSB`, or `HSL`.
+</ParamField>
+
+<ParamField path="max" type="Number">
+  Single maximum applied to all channels (including alpha).
+</ParamField>
+
+<ParamField path="max1" type="Number">
+  Maximum for red (RGB), or hue (HSB/HSL).
+</ParamField>
+
+<ParamField path="max2" type="Number">
+  Maximum for green (RGB), or saturation (HSB/HSL).
+</ParamField>
+
+<ParamField path="max3" type="Number">
+  Maximum for blue (RGB), or brightness/lightness (HSB/HSL).
+</ParamField>
+
+<ParamField path="maxA" type="Number">
+  Maximum for the alpha channel.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Pure red in default RGB
+  fill(255, 0, 0);
+  circle(25, 50, 40);
+
+  // Switch to HSB — pure red is hue 0, full saturation and brightness
+  colorMode(HSB);
+  fill(0, 100, 100);
+  circle(75, 50, 40);
+}
+```
+
+<Info>
+`p5.Color` objects remember the mode in which they were created. Switching `colorMode()` afterward does not change their appearance.
+</Info>
+
+---
+
+## erase / noErase
+
+Enters and exits erase mode.
+
+While erase mode is active, shapes are drawn as transparent "holes" through the canvas to the page underneath. `fill()`, `stroke()`, and `blendMode()` have no effect during erase mode.
+
+`erase()` accepts two optional strength values (0–255). The first controls how strongly the shape's interior erases; the second controls how strongly the shape's edge (stroke) erases. Both default to `255` (full strength).
+
+`erase()` has no effect on `image()` or `background()` calls.
+
+**Signatures**
+
+```js
+erase([strengthFill], [strengthStroke])
+noErase()
+```
+
+<ParamField path="strengthFill" type="Number">
+  Erase strength for the shape's interior, 0–255. Default is `255`.
+</ParamField>
+
+<ParamField path="strengthStroke" type="Number">
+  Erase strength for the shape's edge, 0–255. Default is `255`.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+
+  // Purple-ish background
+  background(100, 100, 250);
+
+  // Pink square
+  fill(250, 100, 100);
+  square(20, 20, 60);
+
+  // Erase a circle-shaped hole
+  erase();
+  circle(50, 50, 40);
+  noErase();
+}
+```
+
+<Note>
+Use `push()` and `pop()` to scope erase mode so that shapes drawn after `pop()` are unaffected.
+</Note>

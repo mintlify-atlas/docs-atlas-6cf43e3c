@@ -1,0 +1,419 @@
+---
+title: "Curves"
+description: "Functions for drawing Bézier curves and Catmull-Rom splines, and for sampling points and tangents along them."
+---
+
+p5.js provides two families of curves: **Bézier curves** (via `bezier()`) and **Catmull-Rom splines** (via `curve()`). Both can also be used as segments inside custom shapes through `bezierVertex()` and `curveVertex()`.
+
+---
+
+## bezier
+
+Draws a cubic Bézier curve.
+
+A Bézier curve is defined by two **anchor points** (where the curve starts and ends) and two **control points** (which "pull" the curve toward them without being on the curve itself). This gives smooth, precise control over the curve's shape.
+
+**Signatures**
+
+```js
+bezier(x1, y1, x2, y2, x3, y3, x4, y4)
+bezier(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)   // WebGL mode
+```
+
+<ParamField path="x1" type="Number" required>
+  x-coordinate of the first anchor point (where the curve starts).
+</ParamField>
+
+<ParamField path="y1" type="Number" required>
+  y-coordinate of the first anchor point.
+</ParamField>
+
+<ParamField path="x2" type="Number" required>
+  x-coordinate of the first control point.
+</ParamField>
+
+<ParamField path="y2" type="Number" required>
+  y-coordinate of the first control point.
+</ParamField>
+
+<ParamField path="x3" type="Number" required>
+  x-coordinate of the second control point.
+</ParamField>
+
+<ParamField path="y3" type="Number" required>
+  y-coordinate of the second control point.
+</ParamField>
+
+<ParamField path="x4" type="Number" required>
+  x-coordinate of the second anchor point (where the curve ends).
+</ParamField>
+
+<ParamField path="y4" type="Number" required>
+  y-coordinate of the second anchor point.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Draw anchor points in black
+  stroke(0);
+  strokeWeight(5);
+  point(85, 20);   // first anchor
+  point(15, 80);   // second anchor
+
+  // Draw control points in red
+  stroke(255, 0, 0);
+  point(10, 10);   // first control
+  point(90, 90);   // second control
+
+  // Draw the Bézier curve
+  noFill();
+  stroke(0);
+  strokeWeight(1);
+  bezier(85, 20, 10, 10, 90, 90, 15, 80);
+
+  // Draw lines from anchors to their control points
+  stroke(255, 0, 0);
+  line(85, 20, 10, 10);
+  line(15, 80, 90, 90);
+}
+```
+
+---
+
+## bezierPoint
+
+Calculates coordinates along a Bézier curve at a given position `t`.
+
+`bezierPoint()` works one axis at a time. Call it once with the x-coordinates of the anchor and control points to get the x-position at `t`, then again with the y-coordinates for the y-position.
+
+**Signature**
+
+```js
+bezierPoint(a, b, c, d, t) → Number
+```
+
+<ParamField path="a" type="Number" required>
+  Coordinate of the first anchor point on this axis.
+</ParamField>
+
+<ParamField path="b" type="Number" required>
+  Coordinate of the first control point on this axis.
+</ParamField>
+
+<ParamField path="c" type="Number" required>
+  Coordinate of the second control point on this axis.
+</ParamField>
+
+<ParamField path="d" type="Number" required>
+  Coordinate of the second anchor point on this axis.
+</ParamField>
+
+<ParamField path="t" type="Number" required>
+  Interpolation amount between `0` (first anchor) and `1` (second anchor).
+</ParamField>
+
+**Returns** `Number` — the coordinate of the point on the curve at `t`.
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  let x1 = 85, x2 = 10, x3 = 90, x4 = 15;
+  let y1 = 20, y2 = 10, y3 = 90, y4 = 80;
+
+  noFill();
+  bezier(x1, y1, x2, y2, x3, y3, x4, y4);
+
+  // Mark the start, midpoint, and end with white circles
+  fill(255);
+  let x = bezierPoint(x1, x2, x3, x4, 0);
+  let y = bezierPoint(y1, y2, y3, y4, 0);
+  circle(x, y, 5);
+
+  x = bezierPoint(x1, x2, x3, x4, 0.5);
+  y = bezierPoint(y1, y2, y3, y4, 0.5);
+  circle(x, y, 5);
+
+  x = bezierPoint(x1, x2, x3, x4, 1);
+  y = bezierPoint(y1, y2, y3, y4, 1);
+  circle(x, y, 5);
+}
+```
+
+---
+
+## bezierTangent
+
+Calculates the tangent to a Bézier curve at position `t`.
+
+The tangent describes the direction the curve is heading at a given point. Like `bezierPoint()`, it works one axis at a time and expects the points in the same order as `bezier()`.
+
+**Signature**
+
+```js
+bezierTangent(a, b, c, d, t) → Number
+```
+
+<ParamField path="a" type="Number" required>
+  Coordinate of the first anchor point on this axis.
+</ParamField>
+
+<ParamField path="b" type="Number" required>
+  Coordinate of the first control point on this axis.
+</ParamField>
+
+<ParamField path="c" type="Number" required>
+  Coordinate of the second control point on this axis.
+</ParamField>
+
+<ParamField path="d" type="Number" required>
+  Coordinate of the second anchor point on this axis.
+</ParamField>
+
+<ParamField path="t" type="Number" required>
+  Position along the curve between `0` and `1`.
+</ParamField>
+
+**Returns** `Number` — coordinate of a point on the tangent line at `t`.
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  let x1 = 85, x2 = 10, x3 = 90, x4 = 15;
+  let y1 = 20, y2 = 10, y3 = 90, y4 = 80;
+
+  noFill();
+  bezier(x1, y1, x2, y2, x3, y3, x4, y4);
+
+  // Draw a tangent line at t = 0.5
+  let x = bezierPoint(x1, x2, x3, x4, 0.5);
+  let y = bezierPoint(y1, y2, y3, y4, 0.5);
+
+  // Scale down the tangent vector to get a short visible line
+  let tx = 0.1 * bezierTangent(x1, x2, x3, x4, 0.5);
+  let ty = 0.1 * bezierTangent(y1, y2, y3, y4, 0.5);
+
+  stroke(255, 0, 0);
+  line(x + tx, y + ty, x - tx, y - ty);
+}
+```
+
+---
+
+## curve
+
+Draws a Catmull-Rom spline.
+
+Catmull-Rom splines pass smoothly through their anchor points. The curve is defined by two **control points** (which are not drawn) and two **anchor points** (the visible segment). The control points influence the curve's direction at the anchors.
+
+**Signatures**
+
+```js
+curve(x1, y1, x2, y2, x3, y3, x4, y4)
+curve(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)   // WebGL mode
+```
+
+<ParamField path="x1" type="Number" required>
+  x-coordinate of the first control point (not drawn).
+</ParamField>
+
+<ParamField path="y1" type="Number" required>
+  y-coordinate of the first control point.
+</ParamField>
+
+<ParamField path="x2" type="Number" required>
+  x-coordinate of the first anchor point (start of visible curve).
+</ParamField>
+
+<ParamField path="y2" type="Number" required>
+  y-coordinate of the first anchor point.
+</ParamField>
+
+<ParamField path="x3" type="Number" required>
+  x-coordinate of the second anchor point (end of visible curve).
+</ParamField>
+
+<ParamField path="y3" type="Number" required>
+  y-coordinate of the second anchor point.
+</ParamField>
+
+<ParamField path="x4" type="Number" required>
+  x-coordinate of the second control point (not drawn).
+</ParamField>
+
+<ParamField path="y4" type="Number" required>
+  y-coordinate of the second control point.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Draw a spline curve in black
+  noFill();
+  stroke(0);
+  curve(5, 26, 73, 24, 73, 61, 15, 65);
+
+  // Draw the anchor points
+  strokeWeight(5);
+  stroke(0);
+  point(73, 24);
+  point(73, 61);
+
+  // Draw the control points in red
+  stroke(255, 0, 0);
+  point(5, 26);
+  point(15, 65);
+}
+```
+
+<Tip>
+To draw a continuous spline that passes through a series of points, call `curve()` multiple times, reusing the previous segment's endpoints as control points for the next call.
+</Tip>
+
+---
+
+## curvePoint
+
+Calculates coordinates along a Catmull-Rom curve at position `t`.
+
+Works one axis at a time, analogous to `bezierPoint()`. Expects points in the same order as `curve()`.
+
+**Signature**
+
+```js
+curvePoint(a, b, c, d, t) → Number
+```
+
+<ParamField path="a" type="Number" required>
+  Coordinate of the first control point on this axis.
+</ParamField>
+
+<ParamField path="b" type="Number" required>
+  Coordinate of the first anchor point on this axis.
+</ParamField>
+
+<ParamField path="c" type="Number" required>
+  Coordinate of the second anchor point on this axis.
+</ParamField>
+
+<ParamField path="d" type="Number" required>
+  Coordinate of the second control point on this axis.
+</ParamField>
+
+<ParamField path="t" type="Number" required>
+  Interpolation amount between `0` and `1`.
+</ParamField>
+
+**Returns** `Number` — the coordinate of the point on the curve at `t`.
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  let x1 = 5,  x2 = 73, x3 = 73, x4 = 15;
+  let y1 = 26, y2 = 24, y3 = 61, y4 = 65;
+
+  noFill();
+  curve(x1, y1, x2, y2, x3, y3, x4, y4);
+
+  // Mark three positions along the curve
+  fill(255);
+  for (let t of [0, 0.5, 1]) {
+    let x = curvePoint(x1, x2, x3, x4, t);
+    let y = curvePoint(y1, y2, y3, y4, t);
+    circle(x, y, 5);
+  }
+}
+```
+
+---
+
+## curveTangent
+
+Calculates the tangent to a Catmull-Rom curve at position `t`.
+
+Works one axis at a time, analogous to `bezierTangent()`.
+
+**Signature**
+
+```js
+curveTangent(a, b, c, d, t) → Number
+```
+
+<ParamField path="a" type="Number" required>
+  Coordinate of the first control point on this axis.
+</ParamField>
+
+<ParamField path="b" type="Number" required>
+  Coordinate of the first anchor point on this axis.
+</ParamField>
+
+<ParamField path="c" type="Number" required>
+  Coordinate of the second anchor point on this axis.
+</ParamField>
+
+<ParamField path="d" type="Number" required>
+  Coordinate of the second control point on this axis.
+</ParamField>
+
+<ParamField path="t" type="Number" required>
+  Position along the curve between `0` and `1`.
+</ParamField>
+
+**Returns** `Number` — coordinate of a point on the tangent line at `t`.
+
+---
+
+## curveTightness
+
+Controls the tightness of Catmull-Rom splines drawn with `curve()` and `curveVertex()`.
+
+The default value is `0`. Increasing the value toward `1` makes the curve pass closer to its control points; decreasing it toward `-1` creates looser, more rounded curves. At `1` the curve becomes a series of straight lines.
+
+**Signature**
+
+```js
+curveTightness(amount)
+```
+
+<ParamField path="amount" type="Number" required>
+  Tightness value. `0` is the default Catmull-Rom behavior. Positive values tighten; negative values loosen.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+}
+
+function draw() {
+  background(200);
+
+  // Map mouse X to a tightness range of -1 to 1
+  let t = map(mouseX, 0, width, -1, 1);
+  curveTightness(t);
+
+  noFill();
+  curve(5, 26, 73, 24, 73, 61, 15, 65);
+}
+```

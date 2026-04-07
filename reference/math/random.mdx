@@ -1,0 +1,329 @@
+---
+title: "Random numbers"
+description: "Generate random numbers, pick random array elements, and use helper functions for mapping and constraining values."
+---
+
+p5.js provides several functions for generating random numbers and for transforming numeric values between ranges. This page covers random number generation (`random`, `randomGaussian`, `randomSeed`) and the most commonly used numeric helper functions (`map`, `constrain`, `lerp`, and others).
+
+---
+
+## Random number generation
+
+### `random()`
+
+Returns a random floating-point number. Behavior depends on the arguments passed:
+
+| Call | Returns |
+|------|---------|
+| `random()` | Float in `[0, 1)` |
+| `random(max)` | Float in `[0, max)` |
+| `random(min, max)` | Float in `[min, max)` |
+| `random(array)` | A random element from the array |
+
+All outcomes are equally likely (uniform distribution).
+
+<ParamField path="min" type="Number">
+  Lower bound (inclusive). When only one number is passed it is treated as the upper bound and `0` is used as the lower bound.
+</ParamField>
+
+<ParamField path="max" type="Number">
+  Upper bound (exclusive).
+</ParamField>
+
+<ParamField path="choices" type="Array">
+  An array to pick a random element from.
+</ParamField>
+
+**Returns** `Number` or the type of the array element.
+
+```js
+let x = random(100);           // 0 up to 100
+let y = random(20, 80);        // 20 up to 80
+let color = random(['red', 'green', 'blue']); // random color string
+```
+
+---
+
+### `randomGaussian(mean?, sd?)`
+
+Returns a random number from a **Gaussian (normal) distribution** — the classic bell curve. Values cluster around the mean; values far from the mean are rare.
+
+```js
+randomGaussian()         // mean 0, sd 1
+randomGaussian(50)       // mean 50, sd 1
+randomGaussian(50, 10)   // mean 50, sd 10
+```
+
+<ParamField path="mean" type="Number">
+  Center of the distribution. Defaults to `0`.
+</ParamField>
+
+<ParamField path="sd" type="Number">
+  Standard deviation — how spread out the values are. Defaults to `1`.
+</ParamField>
+
+**Returns** `Number`
+
+<Info>
+Unlike `random()`, `randomGaussian()` has no hard minimum or maximum. Approximately 68% of values fall within one standard deviation of the mean, and ~99.7% within three.
+</Info>
+
+---
+
+### `randomSeed(seed)`
+
+Sets the seed for `random()` and `randomGaussian()`. By default each sketch run produces a different sequence. Calling `randomSeed()` with a fixed value makes the sequence identical every run.
+
+```js
+randomSeed(42);
+let x = random(100); // always the same value
+```
+
+<ParamField path="seed" type="Number">
+  Seed value.
+</ParamField>
+
+---
+
+## Numeric helper functions
+
+### `map(value, start1, stop1, start2, stop2, withinBounds?)`
+
+Re-maps a number from one range to another. The relationship between `value` and the input range is preserved in the output range.
+
+```js
+// Mouse x (0–width) mapped to a brightness value (0–255)
+let brightness = map(mouseX, 0, width, 0, 255);
+
+// Clamp to output range
+let safe = map(mouseX, 0, 100, 0, 50, true);
+```
+
+<ParamField path="value" type="Number">
+  The value to remap.
+</ParamField>
+
+<ParamField path="start1" type="Number">
+  Lower bound of the input range.
+</ParamField>
+
+<ParamField path="stop1" type="Number">
+  Upper bound of the input range.
+</ParamField>
+
+<ParamField path="start2" type="Number">
+  Lower bound of the output range.
+</ParamField>
+
+<ParamField path="stop2" type="Number">
+  Upper bound of the output range.
+</ParamField>
+
+<ParamField path="withinBounds" type="Boolean">
+  If `true`, the return value is clamped to the output range. Defaults to `false`.
+</ParamField>
+
+**Returns** `Number`
+
+---
+
+### `constrain(n, low, high)`
+
+Clamps `n` so it never falls below `low` or above `high`.
+
+```js
+let x = constrain(mouseX, 0, width);
+```
+
+<ParamField path="n" type="Number">
+  Value to constrain.
+</ParamField>
+
+<ParamField path="low" type="Number">
+  Minimum allowed value.
+</ParamField>
+
+<ParamField path="high" type="Number">
+  Maximum allowed value.
+</ParamField>
+
+**Returns** `Number`
+
+---
+
+### `lerp(start, stop, amt)`
+
+Linearly interpolates between two numbers. `amt = 0` returns `start`, `amt = 1` returns `stop`, `amt = 0.5` returns the midpoint. Values outside `[0, 1]` extrapolate beyond the range.
+
+```js
+x = lerp(x, targetX, 0.05); // smoothly chase a target each frame
+```
+
+<ParamField path="start" type="Number">
+  First value.
+</ParamField>
+
+<ParamField path="stop" type="Number">
+  Second value.
+</ParamField>
+
+<ParamField path="amt" type="Number">
+  Interpolation amount between `0.0` and `1.0`.
+</ParamField>
+
+**Returns** `Number`
+
+---
+
+### `norm(value, start, stop)`
+
+Normalizes `value` from the range `[start, stop]` to `[0, 1]`. Equivalent to `map(value, start, stop, 0, 1)`.
+
+```js
+let t = norm(mouseX, 0, width); // 0.0 on left, 1.0 on right
+```
+
+<ParamField path="value" type="Number">
+  Value to normalize.
+</ParamField>
+
+<ParamField path="start" type="Number">
+  Lower bound of the input range.
+</ParamField>
+
+<ParamField path="stop" type="Number">
+  Upper bound of the input range.
+</ParamField>
+
+**Returns** `Number`
+
+---
+
+### `dist(x1, y1, x2, y2)`
+
+Returns the Euclidean distance between two 2D points. A 3D version `dist(x1, y1, z1, x2, y2, z2)` is also available.
+
+```js
+let d = dist(mouseX, mouseY, width / 2, height / 2);
+```
+
+<ParamField path="x1" type="Number">
+  x-coordinate of the first point.
+</ParamField>
+
+<ParamField path="y1" type="Number">
+  y-coordinate of the first point.
+</ParamField>
+
+<ParamField path="x2" type="Number">
+  x-coordinate of the second point.
+</ParamField>
+
+<ParamField path="y2" type="Number">
+  y-coordinate of the second point.
+</ParamField>
+
+**Returns** `Number`
+
+---
+
+### `mag(a, b)`
+
+Returns the magnitude of a 2D vector `(a, b)`. Equivalent to `dist(0, 0, a, b)`.
+
+```js
+let speed = mag(vx, vy);
+```
+
+<ParamField path="a" type="Number">
+  x component.
+</ParamField>
+
+<ParamField path="b" type="Number">
+  y component.
+</ParamField>
+
+**Returns** `Number`
+
+---
+
+### Rounding and arithmetic
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `abs` | `abs(n)` | Absolute value. |
+| `floor` | `floor(n)` | Round down to nearest integer. |
+| `ceil` | `ceil(n)` | Round up to nearest integer. |
+| `round` | `round(n, decimals?)` | Round to nearest integer, or to `decimals` decimal places. |
+| `sqrt` | `sqrt(n)` | Square root. |
+| `pow` | `pow(n, e)` | `n` raised to the power `e`. |
+| `log` | `log(n)` | Natural logarithm (base *e*). |
+| `sq` | `sq(n)` | Square (`n * n`). |
+| `min` | `min(...nums)` or `min(array)` | Smallest value in arguments or array. |
+| `max` | `max(...nums)` or `max(array)` | Largest value in arguments or array. |
+
+---
+
+## Examples
+
+### Random walker
+
+```js
+let x, y;
+
+function setup() {
+  createCanvas(400, 400);
+  x = width / 2;
+  y = height / 2;
+  background(240);
+}
+
+function draw() {
+  // Step in a random direction
+  x += random(-2, 2);
+  y += random(-2, 2);
+
+  // Keep within canvas
+  x = constrain(x, 0, width);
+  y = constrain(y, 0, height);
+
+  stroke(0, 50);
+  point(x, y);
+}
+```
+
+### Using `map` to drive color from mouse position
+
+```js
+function draw() {
+  background(200);
+
+  // Map mouseX (0–width) to a hue (0–360)
+  colorMode(HSB, 360, 100, 100);
+  let hue = map(mouseX, 0, width, 0, 360);
+  fill(hue, 80, 90);
+  noStroke();
+  circle(width / 2, height / 2, 80);
+}
+```
+
+### Gaussian distribution bell curve
+
+```js
+function setup() {
+  createCanvas(400, 200);
+  background(240);
+  noStroke();
+  fill(0, 60);
+}
+
+function draw() {
+  // Cluster dots around center (mean=200) with spread (sd=40)
+  let x = randomGaussian(200, 40);
+  circle(x, 100, 6);
+}
+```
+
+<Tip>
+Use `randomSeed()` at the top of `setup()` to lock in a specific arrangement for generative artwork, then remove it to explore variations.
+</Tip>

@@ -1,0 +1,396 @@
+---
+title: "p5.TypedDict"
+description: "Typed key-value dictionaries for storing and manipulating string or numeric data in p5.js."
+---
+
+p5.js provides two typed dictionary classes for storing key-value pairs:
+
+- **`p5.StringDict`** — values must be strings.
+- **`p5.NumberDict`** — values must be numbers, with extra arithmetic methods.
+
+Both share a common base (`p5.TypedDict`) and have the same core API. `p5.NumberDict` adds math operations and min/max queries.
+
+---
+
+## p5.StringDict
+
+A dictionary that maps string keys to string values.
+
+### `createStringDict(key, value)` / `createStringDict(object)`
+
+Creates a new `p5.StringDict`. Pass either a single key-value pair or a plain object to initialize multiple entries at once.
+
+```js
+let d = createStringDict('language', 'JavaScript');
+
+let d2 = createStringDict({ name: 'p5', type: 'library' });
+```
+
+<ParamField path="key" type="String">
+  The initial key.
+</ParamField>
+
+<ParamField path="value" type="String">
+  The initial value.
+</ParamField>
+
+<ParamField path="object" type="Object">
+  A plain object whose entries are added to the dictionary.
+</ParamField>
+
+**Returns** `p5.StringDict`
+
+---
+
+## p5.NumberDict
+
+A dictionary that maps keys to number values. Includes all `p5.StringDict` methods plus arithmetic and min/max operations.
+
+### `createNumberDict(key, value)` / `createNumberDict(object)`
+
+Creates a new `p5.NumberDict`.
+
+```js
+let scores = createNumberDict('alice', 0);
+
+let stats = createNumberDict({ hp: 100, mp: 50, level: 1 });
+```
+
+<ParamField path="key" type="Number | String">
+  The initial key.
+</ParamField>
+
+<ParamField path="value" type="Number">
+  The initial numeric value.
+</ParamField>
+
+<ParamField path="object" type="Object">
+  A plain object whose entries are added to the dictionary.
+</ParamField>
+
+**Returns** `p5.NumberDict`
+
+---
+
+## Shared methods (StringDict and NumberDict)
+
+### `.set(key, value)`
+
+Updates the value for an existing key, or inserts a new key-value pair if the key does not exist.
+
+```js
+d.set('score', '100');
+```
+
+<ParamField path="key" type="String | Number">
+  The key to set.
+</ParamField>
+
+<ParamField path="value" type="String | Number">
+  The value to store.
+</ParamField>
+
+---
+
+### `.get(key)`
+
+Returns the value stored at `key`. Logs a message to the console if the key does not exist.
+
+```js
+let val = d.get('score');
+```
+
+<ParamField path="key" type="String | Number">
+  The key to look up.
+</ParamField>
+
+**Returns** `String | Number`
+
+---
+
+### `.hasKey(key)`
+
+Returns `true` if the key exists in the dictionary, `false` otherwise.
+
+```js
+if (d.hasKey('score')) { /* ... */ }
+```
+
+<ParamField path="key" type="String | Number">
+  The key to check.
+</ParamField>
+
+**Returns** `Boolean`
+
+---
+
+### `.remove(key)`
+
+Removes the key-value pair for `key`. Throws an error if the key does not exist.
+
+```js
+d.remove('score');
+```
+
+<ParamField path="key" type="String | Number">
+  The key to remove.
+</ParamField>
+
+---
+
+### `.create(key, value)` / `.create(object)`
+
+Adds a new key-value pair. Accepts either a key and value or a plain object.
+
+```js
+d.create('level', '5');
+d.create({ power: '10', shield: '3' });
+```
+
+<ParamField path="key" type="String | Number">
+  The key for the new entry.
+</ParamField>
+
+<ParamField path="value" type="String | Number">
+  The value for the new entry.
+</ParamField>
+
+---
+
+### `.size()`
+
+Returns the number of key-value pairs currently stored.
+
+```js
+let count = d.size();
+```
+
+**Returns** `Integer`
+
+---
+
+### `.clear()`
+
+Removes all key-value pairs from the dictionary.
+
+```js
+d.clear();
+```
+
+---
+
+### `.print()`
+
+Logs all key-value pairs to the browser console. Useful for debugging.
+
+```js
+d.print();
+// key:name value:p5
+// key:type value:library
+```
+
+---
+
+### `.saveTable(filename?)`
+
+Downloads the dictionary as a CSV file. Each row contains one key-value pair.
+
+```js
+d.saveTable('my-data');
+// downloads my-data.csv
+```
+
+<ParamField path="filename" type="String">
+  File name without extension. Defaults to `'mycsv'`.
+</ParamField>
+
+---
+
+### `.saveJSON(filename?)`
+
+Downloads the dictionary as a JSON file.
+
+```js
+d.saveJSON('my-data');
+// downloads my-data.json
+```
+
+<ParamField path="filename" type="String">
+  File name without extension.
+</ParamField>
+
+---
+
+## p5.NumberDict — additional methods
+
+These methods are only available on `p5.NumberDict`.
+
+### `.add(key, amount)`
+
+Adds `amount` to the value stored at `key`.
+
+```js
+scores.add('alice', 10); // alice's score increases by 10
+```
+
+<ParamField path="key" type="Number | String">
+  The key whose value to modify.
+</ParamField>
+
+<ParamField path="amount" type="Number">
+  The amount to add.
+</ParamField>
+
+---
+
+### `.sub(key, amount)`
+
+Subtracts `amount` from the value stored at `key`.
+
+```js
+stats.sub('hp', 25); // take 25 damage
+```
+
+<ParamField path="key" type="Number | String">
+  The key whose value to modify.
+</ParamField>
+
+<ParamField path="amount" type="Number">
+  The amount to subtract.
+</ParamField>
+
+---
+
+### `.mult(key, amount)`
+
+Multiplies the value stored at `key` by `amount`.
+
+```js
+stats.mult('level', 2);
+```
+
+<ParamField path="key" type="Number | String">
+  The key whose value to modify.
+</ParamField>
+
+<ParamField path="amount" type="Number">
+  The multiplier.
+</ParamField>
+
+---
+
+### `.div(key, amount)`
+
+Divides the value stored at `key` by `amount`.
+
+```js
+stats.div('speed', 2);
+```
+
+<ParamField path="key" type="Number | String">
+  The key whose value to modify.
+</ParamField>
+
+<ParamField path="amount" type="Number">
+  The divisor.
+</ParamField>
+
+---
+
+### `.minValue()`
+
+Returns the lowest value currently stored in the dictionary.
+
+```js
+let lowest = scores.minValue();
+```
+
+**Returns** `Number`
+
+---
+
+### `.maxValue()`
+
+Returns the highest value currently stored in the dictionary.
+
+```js
+let highest = scores.maxValue();
+```
+
+**Returns** `Number`
+
+---
+
+### `.minKey()`
+
+Returns the key associated with the lowest value.
+
+```js
+let loser = scores.minKey();
+```
+
+**Returns** `Number | String`
+
+---
+
+### `.maxKey()`
+
+Returns the key associated with the highest value.
+
+```js
+let winner = scores.maxKey();
+```
+
+**Returns** `Number | String`
+
+---
+
+## Example: game score tracker
+
+```js
+let scores;
+
+function setup() {
+  createCanvas(400, 200);
+  textSize(16);
+
+  // Initialize scores for three players
+  scores = createNumberDict({
+    alice: 0,
+    bob: 0,
+    carol: 0
+  });
+}
+
+function draw() {
+  background(30);
+  fill(255);
+
+  // Simulate score events each frame
+  if (frameCount % 60 === 0) {
+    scores.add('alice', floor(random(10)));
+    scores.add('bob',   floor(random(10)));
+    scores.add('carol', floor(random(10)));
+  }
+
+  // Display scores
+  let y = 40;
+  for (let key of ['alice', 'bob', 'carol']) {
+    text(`${key}: ${scores.get(key)}`, 20, y);
+    y += 30;
+  }
+
+  // Highlight the leader
+  fill(255, 220, 0);
+  text(`Leader: ${scores.maxKey()}`, 200, 40);
+}
+
+// Save scores to JSON on key press
+function keyPressed() {
+  scores.saveJSON('final-scores');
+}
+```
+
+<Note>
+Dictionary keys are always strings internally (as with plain JavaScript objects), even when you pass a number as a key. `scores.minKey()` and `scores.maxKey()` perform numeric comparison when keys look like numbers.
+</Note>

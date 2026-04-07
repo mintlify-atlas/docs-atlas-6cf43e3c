@@ -1,0 +1,118 @@
+---
+title: "preload()"
+description: "Called before setup(); guarantees all asset-loading functions complete before the sketch begins."
+---
+
+A function that's called once to load assets before the sketch runs. Declaring `preload()` sets a code block that executes before `setup()` or `draw()`. It is the correct place to load external files such as images, fonts, JSON data, sounds, and 3D models.
+
+```js
+function preload() {
+  // Load assets here. All loads complete before setup() runs.
+}
+```
+
+Functions such as `loadImage()`, `loadFont()`, `loadJSON()`, `loadModel()`, and `loadSound()` are guaranteed to either finish loading or raise an error when called inside `preload()`. This ensures all assets are available the moment `setup()` begins.
+
+<Warning>
+  Only asset-loading functions belong in `preload()`. Do not put drawing code, variable assignments (other than storing load results), or logic here — place that in `setup()` or `draw()`.
+</Warning>
+
+## Execution order
+
+The full sketch lifecycle is:
+
+1. **`preload()`** — asset loading runs to completion.
+2. `setup()` — runs once after all preloads finish.
+3. `draw()` — loops continuously.
+
+While `preload()` is running, p5.js displays a "Loading..." indicator on the page. You can provide a custom loading screen by adding an element with `id="p5_loading"` to your HTML before the sketch starts.
+
+## Supported load functions
+
+Any function prefixed with `load` is designed for use in `preload()`:
+
+| Function | Loads |
+|----------|-------|
+| `loadImage()` | Images (`jpg`, `png`, `gif`, etc.) |
+| `loadFont()` | OpenType / TrueType fonts |
+| `loadJSON()` | JSON files |
+| `loadStrings()` | Plain text files, line by line |
+| `loadTable()` | CSV / TSV data tables |
+| `loadXML()` | XML documents |
+| `loadModel()` | 3D models (`.obj`, `.stl`) |
+| `loadShader()` | GLSL vertex/fragment shaders |
+
+<Tip>
+  Assign each load result to a variable declared in the outer scope so it's accessible in `setup()` and `draw()`.
+</Tip>
+
+## Examples
+
+### Loading an image
+
+```js
+let img;
+
+function preload() {
+  img = loadImage('assets/photo.jpg');
+}
+
+function setup() {
+  createCanvas(400, 400);
+
+  // img is fully loaded here.
+  image(img, 0, 0);
+
+  describe('A photograph displayed on the canvas.');
+}
+```
+
+### Loading an image and a font
+
+```js
+let img;
+let font;
+
+function preload() {
+  img = loadImage('assets/background.jpg');
+  font = loadFont('assets/OpenSans-Regular.ttf');
+}
+
+function setup() {
+  createCanvas(400, 400);
+
+  // Both assets are available.
+  image(img, 0, 0);
+  textFont(font);
+  textSize(32);
+  fill(255);
+  text('Hello, p5.js!', 20, 60);
+
+  describe('A background image with white text overlaid.');
+}
+```
+
+### Loading JSON data
+
+```js
+let data;
+
+function preload() {
+  data = loadJSON('assets/colors.json');
+}
+
+function setup() {
+  createCanvas(400, 200);
+  background(data.background);
+
+  fill(data.accent);
+  circle(200, 100, 80);
+
+  describe('A circle whose colors are loaded from a JSON file.');
+}
+```
+
+## Related
+
+- [`setup()`](/reference/structure/setup) — runs after `preload()` completes.
+- [`draw()`](/reference/structure/draw) — the main animation loop.

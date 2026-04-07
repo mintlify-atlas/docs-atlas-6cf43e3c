@@ -1,0 +1,519 @@
+---
+title: "2D Primitives"
+description: "Functions for drawing basic 2D shapes: points, lines, rectangles, ellipses, arcs, triangles, and quadrilaterals."
+---
+
+The 2D primitives module provides functions to draw fundamental geometric shapes on the canvas. Each shape respects the current fill, stroke, and drawing-mode settings.
+
+<Note>
+`rect()` and `square()` are affected by `rectMode()`. `ellipse()`, `circle()`, and `arc()` are affected by `ellipseMode()`. By default, `x` and `y` set the top-left corner for rects and the center for ellipses.
+</Note>
+
+---
+
+## point
+
+Draws a single point in space.
+
+A point's default width is one pixel. Use `stroke()` to change its color and `strokeWeight()` to change its size. `fill()` has no effect on points.
+
+**Signatures**
+
+```js
+point(x, y)
+point(x, y, z)      // WebGL mode only
+point(vector)       // accepts a p5.Vector
+```
+
+<ParamField path="x" type="Number" required>
+  The x-coordinate of the point.
+</ParamField>
+
+<ParamField path="y" type="Number" required>
+  The y-coordinate of the point.
+</ParamField>
+
+<ParamField path="z" type="Number">
+  The z-coordinate of the point (WebGL mode only).
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  strokeWeight(5);
+
+  // Top-left
+  point(30, 20);
+
+  // Top-right
+  point(70, 20);
+
+  // Style the remaining points differently.
+  stroke('purple');
+  strokeWeight(10);
+
+  // Bottom-right
+  point(70, 80);
+
+  // Bottom-left
+  point(30, 80);
+}
+```
+
+---
+
+## line
+
+Draws a straight line between two points.
+
+A line's default width is one pixel. Use `stroke()` to set its color and `strokeWeight()` to change its width. `fill()` has no effect on lines.
+
+**Signatures**
+
+```js
+line(x1, y1, x2, y2)
+line(x1, y1, z1, x2, y2, z2)   // WebGL mode only
+```
+
+<ParamField path="x1" type="Number" required>
+  The x-coordinate of the first point.
+</ParamField>
+
+<ParamField path="y1" type="Number" required>
+  The y-coordinate of the first point.
+</ParamField>
+
+<ParamField path="z1" type="Number">
+  The z-coordinate of the first point (WebGL mode only).
+</ParamField>
+
+<ParamField path="x2" type="Number" required>
+  The x-coordinate of the second point.
+</ParamField>
+
+<ParamField path="y2" type="Number" required>
+  The y-coordinate of the second point.
+</ParamField>
+
+<ParamField path="z2" type="Number">
+  The z-coordinate of the second point (WebGL mode only).
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Default black line
+  line(30, 20, 85, 75);
+
+  // Styled magenta line
+  stroke('magenta');
+  strokeWeight(5);
+  line(10, 50, 90, 50);
+}
+```
+
+---
+
+## rect
+
+Draws a rectangle.
+
+By default, `x` and `y` set the top-left corner. `w` sets the width and `h` sets the height. Use `rectMode()` to change how the position is interpreted. Supplying a single corner-radius parameter rounds all four corners equally; supplying four corner-radius parameters rounds each corner independently.
+
+**Signatures**
+
+```js
+rect(x, y, w, [h], [tl], [tr], [br], [bl])
+```
+
+<ParamField path="x" type="Number" required>
+  x-coordinate of the rectangle.
+</ParamField>
+
+<ParamField path="y" type="Number" required>
+  y-coordinate of the rectangle.
+</ParamField>
+
+<ParamField path="w" type="Number" required>
+  Width of the rectangle.
+</ParamField>
+
+<ParamField path="h" type="Number">
+  Height of the rectangle. Defaults to `w` if omitted.
+</ParamField>
+
+<ParamField path="tl" type="Number">
+  Radius of the top-left corner.
+</ParamField>
+
+<ParamField path="tr" type="Number">
+  Radius of the top-right corner. Defaults to `tl` if omitted.
+</ParamField>
+
+<ParamField path="br" type="Number">
+  Radius of the bottom-right corner. Defaults to `tr` if omitted.
+</ParamField>
+
+<ParamField path="bl" type="Number">
+  Radius of the bottom-left corner. Defaults to `br` if omitted.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Plain rectangle
+  rect(10, 10, 50, 30);
+
+  // Rounded rectangle — all corners radius 10
+  rect(10, 55, 50, 30, 10);
+
+  // Rounded rectangle — each corner different
+  rect(70, 10, 25, 75, 5, 10, 15, 20);
+}
+```
+
+<Note>
+`rectMode(CENTER)` makes `x` and `y` the center of the rectangle instead of the top-left corner. `rectMode(CORNERS)` interprets the last two parameters as the opposite corner's coordinates.
+</Note>
+
+---
+
+## square
+
+Draws a square (equal-width-and-height rectangle).
+
+`x` and `y` set the top-left corner; `s` sets both width and height. Corner radii work identically to `rect()`.
+
+**Signature**
+
+```js
+square(x, y, s, [tl], [tr], [br], [bl])
+```
+
+<ParamField path="x" type="Number" required>
+  x-coordinate of the square.
+</ParamField>
+
+<ParamField path="y" type="Number" required>
+  y-coordinate of the square.
+</ParamField>
+
+<ParamField path="s" type="Number" required>
+  Side length of the square.
+</ParamField>
+
+<ParamField path="tl" type="Number">
+  Radius of the top-left corner.
+</ParamField>
+
+<ParamField path="tr" type="Number">
+  Radius of the top-right corner.
+</ParamField>
+
+<ParamField path="br" type="Number">
+  Radius of the bottom-right corner.
+</ParamField>
+
+<ParamField path="bl" type="Number">
+  Radius of the bottom-left corner.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Basic square
+  square(10, 10, 50);
+
+  // Square with uniform corner radius
+  square(10, 65, 30, 8);
+}
+```
+
+---
+
+## ellipse
+
+Draws an ellipse (oval).
+
+`x` and `y` set the center. `w` sets the width. If `h` is omitted, the height equals the width and a circle is drawn. Use `ellipseMode()` to change how position is interpreted.
+
+**Signatures**
+
+```js
+ellipse(x, y, w, [h])
+ellipse(x, y, w, h, [detail])   // WebGL mode: detail = vertex count
+```
+
+<ParamField path="x" type="Number" required>
+  x-coordinate of the center.
+</ParamField>
+
+<ParamField path="y" type="Number" required>
+  y-coordinate of the center.
+</ParamField>
+
+<ParamField path="w" type="Number" required>
+  Width of the ellipse.
+</ParamField>
+
+<ParamField path="h" type="Number">
+  Height of the ellipse. Defaults to `w` if omitted.
+</ParamField>
+
+<ParamField path="detail" type="Integer">
+  Number of vertices used to draw the ellipse in WebGL mode. Default is 25.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Circle (w == h)
+  ellipse(50, 30, 60, 60);
+
+  // Ellipse (w != h)
+  ellipse(50, 75, 80, 30);
+}
+```
+
+---
+
+## circle
+
+Draws a circle by specifying its center and diameter.
+
+This is a convenience wrapper around `ellipse()`. Every point on the edge is exactly `d / 2` (the radius) from the center.
+
+**Signature**
+
+```js
+circle(x, y, d)
+```
+
+<ParamField path="x" type="Number" required>
+  x-coordinate of the center.
+</ParamField>
+
+<ParamField path="y" type="Number" required>
+  y-coordinate of the center.
+</ParamField>
+
+<ParamField path="d" type="Number" required>
+  Diameter of the circle.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  circle(50, 50, 60);
+}
+```
+
+---
+
+## triangle
+
+Draws a triangle defined by three points.
+
+**Signature**
+
+```js
+triangle(x1, y1, x2, y2, x3, y3)
+```
+
+<ParamField path="x1" type="Number" required>
+  x-coordinate of the first point.
+</ParamField>
+
+<ParamField path="y1" type="Number" required>
+  y-coordinate of the first point.
+</ParamField>
+
+<ParamField path="x2" type="Number" required>
+  x-coordinate of the second point.
+</ParamField>
+
+<ParamField path="y2" type="Number" required>
+  y-coordinate of the second point.
+</ParamField>
+
+<ParamField path="x3" type="Number" required>
+  x-coordinate of the third point.
+</ParamField>
+
+<ParamField path="y3" type="Number" required>
+  y-coordinate of the third point.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  triangle(30, 75, 58, 20, 86, 75);
+}
+```
+
+---
+
+## quad
+
+Draws a quadrilateral (four-sided polygon).
+
+Points should be specified in either clockwise or counter-clockwise order. Quadrilaterals include rectangles, rhombuses, and trapezoids.
+
+**Signatures**
+
+```js
+quad(x1, y1, x2, y2, x3, y3, x4, y4)
+quad(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)   // WebGL mode
+```
+
+<ParamField path="x1" type="Number" required>
+  x-coordinate of the first point.
+</ParamField>
+
+<ParamField path="y1" type="Number" required>
+  y-coordinate of the first point.
+</ParamField>
+
+<ParamField path="x2" type="Number" required>
+  x-coordinate of the second point.
+</ParamField>
+
+<ParamField path="y2" type="Number" required>
+  y-coordinate of the second point.
+</ParamField>
+
+<ParamField path="x3" type="Number" required>
+  x-coordinate of the third point.
+</ParamField>
+
+<ParamField path="y3" type="Number" required>
+  y-coordinate of the third point.
+</ParamField>
+
+<ParamField path="x4" type="Number" required>
+  x-coordinate of the fourth point.
+</ParamField>
+
+<ParamField path="y4" type="Number" required>
+  y-coordinate of the fourth point.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Square
+  quad(20, 20, 80, 20, 80, 80, 20, 80);
+
+  // Rhombus
+  quad(50, 10, 90, 50, 50, 90, 10, 50);
+}
+```
+
+---
+
+## arc
+
+Draws an arc — a section of an ellipse.
+
+`x` and `y` set the center of the underlying ellipse. `w` and `h` set its width and height. `start` and `stop` are angles (in radians by default, or degrees if `angleMode(DEGREES)` is set) that define where the arc begins and ends. Arcs are always drawn **clockwise** from `start` to `stop`.
+
+The optional `mode` parameter controls how the arc is closed:
+
+| Mode | Effect |
+| --- | --- |
+| (omitted) | Open arc with a straight line across the bottom |
+| `OPEN` | Open arc, no straight line closing |
+| `CHORD` | Straight line connecting start and end points |
+| `PIE` | Lines from each endpoint to the center (pie-slice) |
+
+**Signature**
+
+```js
+arc(x, y, w, h, start, stop, [mode], [detail])
+```
+
+<ParamField path="x" type="Number" required>
+  x-coordinate of the arc's ellipse center.
+</ParamField>
+
+<ParamField path="y" type="Number" required>
+  y-coordinate of the arc's ellipse center.
+</ParamField>
+
+<ParamField path="w" type="Number" required>
+  Width of the arc's ellipse.
+</ParamField>
+
+<ParamField path="h" type="Number" required>
+  Height of the arc's ellipse.
+</ParamField>
+
+<ParamField path="start" type="Number" required>
+  Angle to start the arc, in radians (or degrees if `angleMode(DEGREES)` is active).
+</ParamField>
+
+<ParamField path="stop" type="Number" required>
+  Angle to stop the arc, in radians (or degrees if `angleMode(DEGREES)` is active).
+</ParamField>
+
+<ParamField path="mode" type="Constant">
+  Fill style: `OPEN`, `CHORD`, or `PIE`. Defaults to a closed semi-circle.
+</ParamField>
+
+<ParamField path="detail" type="Integer">
+  Number of vertices for the arc in WebGL mode. Default is 25.
+</ParamField>
+
+**Example**
+
+```js
+function setup() {
+  createCanvas(100, 100);
+  background(200);
+
+  // Default arc
+  arc(25, 50, 40, 40, 0, PI + HALF_PI);
+
+  // CHORD mode
+  arc(50, 50, 40, 40, 0, PI + QUARTER_PI, CHORD);
+
+  // PIE mode
+  arc(75, 50, 40, 40, 0, PI + QUARTER_PI, PIE);
+}
+```
+
+<Tip>
+Use the `PIE` mode to create a Pac-Man–style animation by varying the `start` and `stop` angles each frame.
+</Tip>
